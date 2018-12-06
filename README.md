@@ -21,4 +21,7 @@
  ![avatar](screenshots/20181206172825.png)
 
 ## 如何安装
-下载根目录下文件：mybatis-generator-plus.zip进行安装
+[点击这里](https://github.com/leecho/mybatis-generator-plus/releases)下载安装包进行安装
+
+## 感谢
+本项目是在[better-mybatis-generator](https://github.com/kmaster/better-mybatis-generator)基础之上进行开发的
