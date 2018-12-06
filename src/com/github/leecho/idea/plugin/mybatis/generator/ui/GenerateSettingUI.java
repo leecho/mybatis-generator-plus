@@ -1,7 +1,7 @@
 package com.github.leecho.idea.plugin.mybatis.generator.ui;
 
 import com.github.leecho.idea.plugin.mybatis.generator.contants.PluginContants;
-import com.github.leecho.idea.plugin.mybatis.generator.generate.MyBatisCodeGenerator;
+import com.github.leecho.idea.plugin.mybatis.generator.generate.MyBatisGenerateCommand;
 import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
 import com.github.leecho.idea.plugin.mybatis.generator.model.EntityConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.GlobalConfig;
@@ -509,7 +509,7 @@ public class GenerateSettingUI extends DialogWrapper {
 		entityConfig.setSourcePath(this.entityConfig.getSourcePath());
 		entityConfig.setResourcePath(this.entityConfig.getResourcePath());
 
-		new MyBatisCodeGenerator(entityConfig).execute(project, connectionConfig);
+		new MyBatisGenerateCommand(entityConfig).execute(project, connectionConfig);
 
 	}
 

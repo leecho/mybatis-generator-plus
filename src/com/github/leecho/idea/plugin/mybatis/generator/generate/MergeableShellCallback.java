@@ -1,6 +1,6 @@
 package com.github.leecho.idea.plugin.mybatis.generator.generate;
 
-import com.github.leecho.idea.plugin.mybatis.generator.util.MapperFileMerger;
+import com.github.leecho.idea.plugin.mybatis.generator.util.JavaFileMerger;
 import org.mybatis.generator.exception.ShellException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
@@ -25,7 +25,7 @@ public class MergeableShellCallback extends DefaultShellCallback {
 		String filePath = existingFileFullPath.replace(".java", "");
 		if (filePath.endsWith("Mapper")) {
 			try {
-				return new MapperFileMerger().getNewJavaFile(newFileSource, existingFileFullPath);
+				return new JavaFileMerger().getNewJavaFile(newFileSource, existingFileFullPath);
 			} catch (FileNotFoundException e) {
 				throw new ShellException(e);
 			}

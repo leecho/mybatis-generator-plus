@@ -1,562 +1,442 @@
 package com.github.leecho.idea.plugin.mybatis.generator.generate;
 
-import cn.kt.DbRemarksCommentGenerator;
-import com.intellij.credentialStore.CredentialAttributes;
-import com.intellij.database.model.RawConnectionConfig;
-import com.intellij.ide.passwordSafe.PasswordSafe;
-import com.intellij.notification.*;
-import com.intellij.openapi.fileEditor.OpenFileDescriptor;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.ui.popup.Balloon;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.StatusBar;
-import com.intellij.openapi.wm.WindowManager;
-import com.intellij.ui.awt.RelativePoint;
-import com.github.leecho.idea.plugin.mybatis.generator.model.EntityConfig;
-import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
-import com.github.leecho.idea.plugin.mybatis.generator.model.DbType;
-import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration;
-import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
-import org.mybatis.generator.api.MyBatisGenerator;
-import org.mybatis.generator.api.ShellCallback;
-import org.mybatis.generator.config.*;
-import org.mybatis.generator.internal.DefaultShellCallback;
+import static org.mybatis.generator.internal.util.ClassloaderUtility.getCustomClassloader;
+import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
-import javax.swing.event.HyperlinkEvent;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.github.leecho.idea.plugin.mybatis.generator.util.XmlFileMerger;
+import org.mybatis.generator.api.GeneratedJavaFile;
+import org.mybatis.generator.api.GeneratedXmlFile;
+import org.mybatis.generator.api.ProgressCallback;
+import org.mybatis.generator.api.ShellCallback;
+import org.mybatis.generator.codegen.RootClassInfo;
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.Context;
+import org.mybatis.generator.config.MergeConstants;
+import org.mybatis.generator.exception.InvalidConfigurationException;
+import org.mybatis.generator.exception.ShellException;
+import org.mybatis.generator.internal.DefaultShellCallback;
+import org.mybatis.generator.internal.ObjectFactory;
+import org.mybatis.generator.internal.NullProgressCallback;
 
 /**
- * 生成mybatis相关代码
- * Created by kangtian on 2018/7/28.
+ * This class is the main interface to MyBatis generator. A typical execution of the tool involves these steps:
+ * 
+ * <ol>
+ * <li>Create a Configuration object. The Configuration can be the result of a parsing the XML configuration file, or it
+ * can be created solely in Java.</li>
+ * <li>Create a MyBatisCodeGenerator object</li>
+ * <li>Call one of the generate() methods</li>
+ * </ol>
+ *
+ * @author Jeff Butler
+ * @see org.mybatis.generator.config.xml.ConfigurationParser
  */
 public class MyBatisCodeGenerator {
 
-	//持久化的配置
-	private MyBatisGeneratorConfiguration myBatisGeneratorConfiguration;
-	//界面默认配置
-	private EntityConfig entityConfig;
-	private String username;
-	//数据库类型
-	private String databaseType;
-	//数据库驱动
-	private String driverClass;
-	//数据库连接url
-	private String url;
-
-	public MyBatisCodeGenerator(EntityConfig entityConfig) {
-		this.entityConfig = entityConfig;
-	}
-
-	/**
-	 * 自动生成的主逻辑
-	 *
-	 * @param project
-	 * @param connectionConfig
-	 * @throws Exception
-	 */
-	public void execute(Project project, RawConnectionConfig connectionConfig) {
-		this.myBatisGeneratorConfiguration = MyBatisGeneratorConfiguration.getInstance(project);
-
-		saveConfig();//执行前 先保存一份当前配置
-
-		driverClass = connectionConfig.getDriverClass();
-		url = connectionConfig.getUrl();
-		if (driverClass.contains("mysql")) {
-			databaseType = "MySQL";
-		} else if (driverClass.contains("oracle")) {
-			databaseType = "Oracle";
-		} else if (driverClass.contains("postgresql")) {
-			databaseType = "PostgreSQL";
-		} else if (driverClass.contains("sqlserver")) {
-			databaseType = "SqlServer";
-		} else if (driverClass.contains("sqlite")) {
-			databaseType = "Sqlite";
-		} else if (driverClass.contains("mariadb")) {
-			databaseType = "MariaDB";
-		}
-
-
-		Configuration configuration = new Configuration();
-		Context context = new Context(ModelType.CONDITIONAL);
-		configuration.addContext(context);
-
-		context.setId("myid");
-		context.addProperty("autoDelimitKeywords", "true");
-		context.addProperty("beginningDelimiter", "`");
-		context.addProperty("endingDelimiter", "`");
-		context.addProperty("javaFileEncoding", "UTF-8");
-		context.addProperty(PropertyRegistry.CONTEXT_JAVA_FILE_ENCODING, "UTF-8");
-		context.setTargetRuntime("MyBatis3");
-
-		JDBCConnectionConfiguration jdbcConfig = buildJdbcConfig();
-		if (jdbcConfig == null) {
-			return;
-		}
-		TableConfiguration tableConfig = buildTableConfig(context);
-		JavaModelGeneratorConfiguration modelConfig = buildModelConfig();
-		SqlMapGeneratorConfiguration mapperConfig = buildMapperXmlConfig();
-		JavaClientGeneratorConfiguration daoConfig = buildMapperConfig();
-		CommentGeneratorConfiguration commentConfig = buildCommentConfig();
-
-		context.addTableConfiguration(tableConfig);
-		context.setJdbcConnectionConfiguration(jdbcConfig);
-		context.setJavaModelGeneratorConfiguration(modelConfig);
-		context.setSqlMapGeneratorConfiguration(mapperConfig);
-		context.setJavaClientGeneratorConfiguration(daoConfig);
-		context.setCommentGeneratorConfiguration(commentConfig);
-		addPluginConfiguration(context);
-
-		createFolderForNeed(entityConfig);
-		List<String> warnings = new ArrayList<>();
-		// override=true
-		ShellCallback shellCallback;
-		if (entityConfig.isOverride()) {
-			shellCallback = new DefaultShellCallback(true);
-		} else {
-			shellCallback = new MergeableShellCallback(false);
-		}
-		Set<String> fullyQualifiedTables = new HashSet<>();
-		Set<String> contexts = new HashSet<>();
-
-		try {
-			MyBatisGenerator myBatisGenerator = new MyBatisGenerator(configuration, shellCallback, warnings);
-			StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
-			Balloon balloon = JBPopupFactory.getInstance()
-					.createHtmlTextBalloonBuilder("Generating Code...", MessageType.INFO, null)
-					.createBalloon();
-			balloon.show(RelativePoint.getCenterOf(statusBar.getComponent()), Balloon.Position.atRight);
-
-			Task.Backgroundable generateTask = new Task.Backgroundable(project, "Generating MyBatis Code", false) {
-				@Override
-				public void run(ProgressIndicator indicator) {
-					indicator.setText("Generating MyBatis Code");
-					indicator.setFraction(0.0);
-					indicator.setIndeterminate(true);
-					try {
-						myBatisGenerator.generate(new GenerateCallback(indicator, balloon), contexts, fullyQualifiedTables);
-						VirtualFile baseDir = project.getBaseDir();
-						baseDir.refresh(false, true);
-
-						NotificationGroup balloonNotifications = new NotificationGroup("Mybatis Generator Plus", NotificationDisplayType.STICKY_BALLOON, true);
-
-						List<String> result = myBatisGenerator.getGeneratedJavaFiles().stream()
-								.map(generatedJavaFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project), entityConfig.getSourcePath(), generatedJavaFile.getTargetPackage().replace(".", "/"), generatedJavaFile.getFileName(), generatedJavaFile.getFileName()))
-								.collect(Collectors.toList());
-						result.addAll(myBatisGenerator.getGeneratedXmlFiles().stream()
-								.map(generatedXmlFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project).replace(project.getBasePath() + "/", ""), entityConfig.getResourcePath(), generatedXmlFile.getTargetPackage().replace(".", "/"), generatedXmlFile.getFileName(), generatedXmlFile.getFileName()))
-								.collect(Collectors.toList()));
-						System.out.println(result);
-						Notification notification = balloonNotifications.createNotification("Generate Finished", "<html>" + String.join("<br/>", result) + "</html>", NotificationType.INFORMATION, (notification1, hyperlinkEvent) -> {
-							if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-								new OpenFileDescriptor(project, Objects.requireNonNull(project.getBaseDir().findFileByRelativePath(hyperlinkEvent.getDescription()))).navigate(true);
-							}
-						});
-						Notifications.Bus.notify(notification);
-					} catch (Exception e) {
-						e.printStackTrace();
-						balloon.hide();
-						Notification notification = new Notification("Mybatis Generator Plus", null, NotificationType.ERROR);
-						notification.setTitle("Generate Code Failed");
-						notification.setContent("Cause:" + e.getMessage());
-						Notifications.Bus.notify(notification);
-					}
-				}
-			};
-			generateTask.setCancelText("Stop generate code").queue();
-			generateTask.setCancelTooltipText("Stop generate mybatis code");
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			Messages.showMessageDialog(e.getMessage(), "Generate Failure", Messages.getInformationIcon());
-		}
-
-	}
-
-	private String getRelativePath(Project project) {
-		if (entityConfig.getProjectRootPath().equals(project.getBasePath())) {
-			return "";
-		} else {
-			return entityConfig.getProjectRootPath().replace(project.getBasePath() + "/", "") + "/";
-		}
-	}
-
-
-	/**
-	 * 创建所需目录
-	 *
-	 * @param entityConfig
-	 */
-	private void createFolderForNeed(EntityConfig entityConfig) {
-
-
-		String sourcePath = entityConfig.getProjectRootPath() + "/" + entityConfig.getSourcePath() + "/";
-		String resourcePath = entityConfig.getProjectRootPath() + "/" + entityConfig.getResourcePath() + "/";
-
-		File sourceFile = new File(sourcePath);
-		if (!sourceFile.exists() && !sourceFile.isDirectory()) {
-			sourceFile.mkdirs();
-		}
-
-		File resourceFile = new File(resourcePath);
-		if (!resourceFile.exists() && !resourceFile.isDirectory()) {
-			resourceFile.mkdirs();
-		}
-	}
-
-
-	/**
-	 * 保存当前配置到历史记录
-	 */
-	private void saveConfig() {
-		Map<String, EntityConfig> historyConfigList = myBatisGeneratorConfiguration.getEntityConfigs();
-		if (historyConfigList == null) {
-			historyConfigList = new HashMap<>();
-		}
-
-		String daoName = entityConfig.getMapperName();
-		String modelName = entityConfig.getEntityName();
-		String daoPostfix = daoName.replace(modelName, "");
-		entityConfig.setMapperPostfix(daoPostfix);
-
-		historyConfigList.put(entityConfig.getName(), entityConfig);
-		myBatisGeneratorConfiguration.setEntityConfigs(historyConfigList);
-
-	}
-
-	/**
-	 * 生成数据库连接配置
-	 *
-	 * @return
-	 */
-	private JDBCConnectionConfiguration buildJdbcConfig() {
-
-		JDBCConnectionConfiguration jdbcConfig = new JDBCConnectionConfiguration();
-		jdbcConfig.addProperty("nullCatalogMeansCurrent", "true");
-
-
-		Map<String, Credential> users = myBatisGeneratorConfiguration.getCredentials();
-		//if (users != null && users.containsKey(url)) {
-		Credential credential = users.get(url);
-
-		username = credential.getUsername();
-
-		CredentialAttributes credentialAttributes = new CredentialAttributes("mybatis-generator-" + url, username, this.getClass(), false);
-		String password = PasswordSafe.getInstance().getPassword(credentialAttributes);
-
-		jdbcConfig.setUserId(username);
-		jdbcConfig.setPassword(password);
-
-		Boolean mySQL_8 = entityConfig.isMysql8();
-		if (mySQL_8) {
-			driverClass = DbType.MySQL_8.getDriverClass();
-			url += "?serverTimezone=UTC&useSSL=false";
-		} else {
-			url += "?useSSL=false";
-		}
-
-		jdbcConfig.setDriverClass(driverClass);
-		jdbcConfig.setConnectionURL(url);
-		return jdbcConfig;
-		/*} else {
-			DatabaseCredentialUI databaseCredentialUI = new DatabaseCredentialUI(driverClass, url, anActionEvent, entityConfig);
-			return null;
-		}*/
-
-	}
-
-	/**
-	 * 生成table配置
-	 *
-	 * @param context
-	 * @return
-	 */
-	private TableConfiguration buildTableConfig(Context context) {
-		TableConfiguration tableConfig = new TableConfiguration(context);
-		tableConfig.setTableName(entityConfig.getTableName());
-		tableConfig.setDomainObjectName(entityConfig.getEntityName());
-
-		String schema;
-		if (databaseType.equals(DbType.MySQL.name())) {
-			String[] name_split = url.split("/");
-			schema = name_split[name_split.length - 1];
-			tableConfig.setSchema(schema);
-		} else if (databaseType.equals(DbType.Oracle.name())) {
-			String[] name_split = url.split(":");
-			schema = name_split[name_split.length - 1];
-			tableConfig.setCatalog(schema);
-		} else {
-			String[] name_split = url.split("/");
-			schema = name_split[name_split.length - 1];
-			tableConfig.setCatalog(schema);
-		}
-
-		if (!entityConfig.isUseExample()) {
-			tableConfig.setUpdateByExampleStatementEnabled(false);
-			tableConfig.setCountByExampleStatementEnabled(false);
-			tableConfig.setDeleteByExampleStatementEnabled(false);
-			tableConfig.setSelectByExampleStatementEnabled(false);
-		}
-
-		if (entityConfig.isUseSchemaPrefix()) {
-			if (DbType.MySQL.name().equals(databaseType)) {
-				tableConfig.setSchema(schema);
-			} else if (DbType.Oracle.name().equals(databaseType)) {
-				//Oracle的schema为用户名，如果连接用户拥有dba等高级权限，若不设schema，会导致把其他用户下同名的表也生成一遍导致mapper中代码重复
-				tableConfig.setSchema(username);
-			} else {
-				tableConfig.setCatalog(schema);
-			}
-		}
-
-		if ("org.postgresql.Driver".equals(driverClass)) {
-			tableConfig.setDelimitIdentifiers(true);
-		}
-
-		if (!StringUtils.isEmpty(entityConfig.getPrimaryKey())) {
-			String dbType = databaseType;
-			if (DbType.MySQL.name().equals(databaseType)) {
-				dbType = "JDBC";
-				//dbType为JDBC，且配置中开启useGeneratedKeys时，Mybatis会使用Jdbc3KeyGenerator,
-				//使用该KeyGenerator的好处就是直接在一次INSERT 语句内，通过resultSet获取得到 生成的主键值，
-				//并很好的支持设置了读写分离代理的数据库
-				//例如阿里云RDS + 读写分离代理 无需指定主库
-				//当使用SelectKey时，Mybatis会使用SelectKeyGenerator，INSERT之后，多发送一次查询语句，获得主键值
-				//在上述读写分离被代理的情况下，会得不到正确的主键
-			}
-			tableConfig.setGeneratedKey(new GeneratedKey(entityConfig.getPrimaryKey(), dbType, true, null));
-		}
-
-		if (entityConfig.isUseActualColumnNames()) {
-			tableConfig.addProperty("useActualColumnNames", "true");
-		}
-
-		if (entityConfig.isUseTableNameAlias()) {
-			tableConfig.setAlias(entityConfig.getTableName());
-		}
-		tableConfig.setMapperName(entityConfig.getMapperName());
-		return tableConfig;
-	}
-
-
-	/**
-	 * 生成实体类配置
-	 *
-	 * @return
-	 */
-	private JavaModelGeneratorConfiguration buildModelConfig() {
-		String projectFolder = entityConfig.getProjectRootPath();
-		String entityPackage = entityConfig.getEntityPackage();
-		String sourcePath = entityConfig.getSourcePath();
-
-		JavaModelGeneratorConfiguration modelConfig = new JavaModelGeneratorConfiguration();
-
-		if (!StringUtils.isEmpty(entityPackage)) {
-			modelConfig.setTargetPackage(entityPackage);
-		} else {
-			modelConfig.setTargetPackage("");
-		}
-		modelConfig.setTargetProject(projectFolder + "/" + sourcePath + "/");
-		return modelConfig;
-	}
-
-	/**
-	 * 生成mapper.xml文件配置
-	 *
-	 * @return
-	 */
-	private SqlMapGeneratorConfiguration buildMapperXmlConfig() {
-
-		String projectFolder = entityConfig.getProjectRootPath();
-		String mappingXMLPackage = entityConfig.getXmlPackage();
-		String resourcePath = entityConfig.getResourcePath();
-
-		SqlMapGeneratorConfiguration mapperConfig = new SqlMapGeneratorConfiguration();
-
-		if (!StringUtils.isEmpty(mappingXMLPackage)) {
-			mapperConfig.setTargetPackage(mappingXMLPackage);
-		} else {
-			mapperConfig.setTargetPackage("");
-		}
-
-		mapperConfig.setTargetProject(projectFolder + "/" + resourcePath + "/");
-
-		//14
-		if (entityConfig.isOverride()) {
-			String mappingXMLFilePath = getMappingXMLFilePath(entityConfig);
-			File mappingXMLFile = new File(mappingXMLFilePath);
-			if (mappingXMLFile.exists()) {
-				mappingXMLFile.delete();
-			}
-		}
-
-		return mapperConfig;
-	}
-
-	/**
-	 * 生成dao接口文件配置
-	 *
-	 * @return
-	 */
-	private JavaClientGeneratorConfiguration buildMapperConfig() {
-
-		String projectFolder = entityConfig.getProjectRootPath();
-		String mapperPackage = entityConfig.getMapperPackage();
-		String mapperPath = entityConfig.getSourcePath();
-
-		JavaClientGeneratorConfiguration mapperConfig = new JavaClientGeneratorConfiguration();
-		mapperConfig.setConfigurationType("XMLMAPPER");
-		mapperConfig.setTargetPackage(mapperPackage);
-
-		if (!StringUtils.isEmpty(mapperPackage)) {
-			mapperConfig.setTargetPackage(mapperPackage);
-		} else {
-			mapperConfig.setTargetPackage("");
-		}
-
-		mapperConfig.setTargetProject(projectFolder + "/" + mapperPath + "/");
-
-		return mapperConfig;
-	}
-
-	/**
-	 * 生成注释配置
-	 *
-	 * @return
-	 */
-	private CommentGeneratorConfiguration buildCommentConfig() {
-		CommentGeneratorConfiguration commentConfig = new CommentGeneratorConfiguration();
-		commentConfig.setConfigurationType(DbRemarksCommentGenerator.class.getName());
-
-		if (entityConfig.isComment()) {
-			commentConfig.addProperty("columnRemarks", "true");
-		}
-		if (entityConfig.isAnnotation()) {
-			commentConfig.addProperty("annotations", "true");
-		}
-
-		return commentConfig;
-	}
-
-	/**
-	 * 添加相关插件（注意插件文件需要通过jar引入）
-	 *
-	 * @param context
-	 */
-	private void addPluginConfiguration(Context context) {
-
-
-		//实体添加序列化
-		PluginConfiguration serializablePlugin = new PluginConfiguration();
-		serializablePlugin.addProperty("type", "org.mybatis.generator.plugins.SerializablePlugin");
-		serializablePlugin.setConfigurationType("org.mybatis.generator.plugins.SerializablePlugin");
-		context.addPluginConfiguration(serializablePlugin);
-
-
-		if (entityConfig.isNeedToStringHashcodeEquals()) {
-			PluginConfiguration equalsHashCodePlugin = new PluginConfiguration();
-			equalsHashCodePlugin.addProperty("type", "org.mybatis.generator.plugins.EqualsHashCodePlugin");
-			equalsHashCodePlugin.setConfigurationType("org.mybatis.generator.plugins.EqualsHashCodePlugin");
-			context.addPluginConfiguration(equalsHashCodePlugin);
-			PluginConfiguration toStringPluginPlugin = new PluginConfiguration();
-			toStringPluginPlugin.addProperty("type", "org.mybatis.generator.plugins.ToStringPlugin");
-			toStringPluginPlugin.setConfigurationType("org.mybatis.generator.plugins.ToStringPlugin");
-			context.addPluginConfiguration(toStringPluginPlugin);
-		}
-
-		if (entityConfig.isLombokAnnotation()) {
-			PluginConfiguration lombokPlugin = new PluginConfiguration();
-			lombokPlugin.addProperty("type", "com.softwareloop.mybatis.generator.plugins.LombokPlugin");
-			lombokPlugin.setConfigurationType("com.softwareloop.mybatis.generator.plugins.LombokPlugin");
-			if (entityConfig.isLombokBuilderAnnotation()) {
-				lombokPlugin.addProperty("builder", "true");
-				lombokPlugin.addProperty("allArgsConstructor", "true");
-				lombokPlugin.addProperty("noArgsConstructor", "true");
-			}
-			context.addPluginConfiguration(lombokPlugin);
-		}
-
-
-		// limit/offset插件
-		if (entityConfig.isOffsetLimit()) {
-			if (DbType.MySQL.name().equals(databaseType)
-					|| DbType.PostgreSQL.name().equals(databaseType)) {
-				PluginConfiguration mySQLLimitPlugin = new PluginConfiguration();
-				mySQLLimitPlugin.addProperty("type", "cn.kt.MySQLLimitPlugin");
-				mySQLLimitPlugin.setConfigurationType("cn.kt.MySQLLimitPlugin");
-				context.addPluginConfiguration(mySQLLimitPlugin);
-			}
-		}
-
-		//for JSR310
-		if (entityConfig.isJsr310Support()) {
-			JavaTypeResolverConfiguration javaTypeResolverPlugin = new JavaTypeResolverConfiguration();
-			javaTypeResolverPlugin.setConfigurationType("cn.kt.JavaTypeResolverJsr310Impl");
-			context.setJavaTypeResolverConfiguration(javaTypeResolverPlugin);
-		}
-
-		//forUpdate 插件
-		if (entityConfig.isNeedForUpdate()) {
-			if (DbType.MySQL.name().equals(databaseType)
-					|| DbType.PostgreSQL.name().equals(databaseType)) {
-				PluginConfiguration mySQLForUpdatePlugin = new PluginConfiguration();
-				mySQLForUpdatePlugin.addProperty("type", "cn.kt.MySQLForUpdatePlugin");
-				mySQLForUpdatePlugin.setConfigurationType("cn.kt.MySQLForUpdatePlugin");
-				context.addPluginConfiguration(mySQLForUpdatePlugin);
-			}
-		}
-
-		//repository 插件
-		if (entityConfig.isAnnotationDAO()) {
-			if (DbType.MySQL.name().equals(databaseType)
-					|| DbType.PostgreSQL.name().equals(databaseType)) {
-				PluginConfiguration repositoryPlugin = new PluginConfiguration();
-				repositoryPlugin.addProperty("type", "cn.kt.RepositoryPlugin");
-				repositoryPlugin.setConfigurationType("cn.kt.RepositoryPlugin");
-				context.addPluginConfiguration(repositoryPlugin);
-			}
-		}
-
-		//13
-		if (entityConfig.isUseDAOExtendStyle()) {
-			if (DbType.MySQL.name().equals(databaseType)
-					|| DbType.PostgreSQL.name().equals(databaseType)) {
-				PluginConfiguration commonDAOInterfacePlugin = new PluginConfiguration();
-				commonDAOInterfacePlugin.addProperty("type", "cn.kt.CommonDAOInterfacePlugin");
-				commonDAOInterfacePlugin.setConfigurationType("cn.kt.CommonDAOInterfacePlugin");
-				context.addPluginConfiguration(commonDAOInterfacePlugin);
-			}
-		}
-
-	}
-
-	/**
-	 * 获取xml文件路径 用以删除之前的xml
-	 *
-	 * @param entityConfig
-	 * @return
-	 */
-	private String getMappingXMLFilePath(EntityConfig entityConfig) {
-		StringBuilder sb = new StringBuilder();
-		String mappingXMLPackage = entityConfig.getXmlPackage();
-		String xmlMvnPath = entityConfig.getResourcePath();
-		sb.append(entityConfig.getProjectRootPath() + "/" + xmlMvnPath + "/");
-
-		if (!StringUtils.isEmpty(mappingXMLPackage)) {
-			sb.append(mappingXMLPackage.replace(".", "/")).append("/");
-		}
-		if (!StringUtils.isEmpty(entityConfig.getMapperName())) {
-			sb.append(entityConfig.getMapperName()).append(".xml");
-		} else {
-			sb.append(entityConfig.getEntityName()).append("Mapper.xml");
-		}
-
-		return sb.toString();
-	}
+    /** The configuration. */
+    private Configuration configuration;
+
+    /** The shell callback. */
+    private ShellCallback shellCallback;
+
+    /** The generated java files. */
+    private List<GeneratedJavaFile> generatedJavaFiles;
+
+    /** The generated xml files. */
+    private List<GeneratedXmlFile> generatedXmlFiles;
+
+    /** The warnings. */
+    private List<String> warnings;
+
+    /** The projects. */
+    private Set<String> projects;
+
+    /**
+     * Constructs a MyBatisCodeGenerator object.
+     * 
+     * @param configuration
+     *            The configuration for this invocation
+     * @param shellCallback
+     *            an instance of a ShellCallback interface. You may specify
+     *            <code>null</code> in which case the DefaultShellCallback will
+     *            be used.
+     * @param warnings
+     *            Any warnings generated during execution will be added to this
+     *            list. Warnings do not affect the running of the tool, but they
+     *            may affect the results. A typical warning is an unsupported
+     *            data type. In that case, the column will be ignored and
+     *            generation will continue. You may specify <code>null</code> if
+     *            you do not want warnings returned.
+     * @throws InvalidConfigurationException
+     *             if the specified configuration is invalid
+     */
+    public MyBatisCodeGenerator(Configuration configuration, ShellCallback shellCallback,
+                                List<String> warnings) throws InvalidConfigurationException {
+        super();
+        if (configuration == null) {
+            throw new IllegalArgumentException(getString("RuntimeError.2")); //$NON-NLS-1$
+        } else {
+            this.configuration = configuration;
+        }
+
+        if (shellCallback == null) {
+            this.shellCallback = new DefaultShellCallback(false);
+        } else {
+            this.shellCallback = shellCallback;
+        }
+
+        if (warnings == null) {
+            this.warnings = new ArrayList<String>();
+        } else {
+            this.warnings = warnings;
+        }
+        generatedJavaFiles = new ArrayList<GeneratedJavaFile>();
+        generatedXmlFiles = new ArrayList<GeneratedXmlFile>();
+        projects = new HashSet<String>();
+
+        this.configuration.validate();
+    }
+
+    /**
+     * This is the main method for generating code. This method is long running, but progress can be provided and the
+     * method can be canceled through the ProgressCallback interface. This version of the method runs all configured
+     * contexts.
+     *
+     * @param callback
+     *            an instance of the ProgressCallback interface, or <code>null</code> if you do not require progress
+     *            information
+     * @throws SQLException
+     *             the SQL exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws InterruptedException
+     *             if the method is canceled through the ProgressCallback
+     */
+    public void generate(ProgressCallback callback) throws SQLException,
+            IOException, InterruptedException {
+        generate(callback, null, null, true);
+    }
+
+    /**
+     * This is the main method for generating code. This method is long running, but progress can be provided and the
+     * method can be canceled through the ProgressCallback interface.
+     *
+     * @param callback
+     *            an instance of the ProgressCallback interface, or <code>null</code> if you do not require progress
+     *            information
+     * @param contextIds
+     *            a set of Strings containing context ids to run. Only the contexts with an id specified in this list
+     *            will be run. If the list is null or empty, than all contexts are run.
+     * @throws SQLException
+     *             the SQL exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws InterruptedException
+     *             if the method is canceled through the ProgressCallback
+     */
+    public void generate(ProgressCallback callback, Set<String> contextIds)
+            throws SQLException, IOException, InterruptedException {
+        generate(callback, contextIds, null, true);
+    }
+
+    /**
+     * This is the main method for generating code. This method is long running, but progress can be provided and the
+     * method can be cancelled through the ProgressCallback interface.
+     *
+     * @param callback
+     *            an instance of the ProgressCallback interface, or <code>null</code> if you do not require progress
+     *            information
+     * @param contextIds
+     *            a set of Strings containing context ids to run. Only the contexts with an id specified in this list
+     *            will be run. If the list is null or empty, than all contexts are run.
+     * @param fullyQualifiedTableNames
+     *            a set of table names to generate. The elements of the set must be Strings that exactly match what's
+     *            specified in the configuration. For example, if table name = "foo" and schema = "bar", then the fully
+     *            qualified table name is "foo.bar". If the Set is null or empty, then all tables in the configuration
+     *            will be used for code generation.
+     * @throws SQLException
+     *             the SQL exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws InterruptedException
+     *             if the method is canceled through the ProgressCallback
+     */
+    public void generate(ProgressCallback callback, Set<String> contextIds,
+            Set<String> fullyQualifiedTableNames) throws SQLException,
+            IOException, InterruptedException {
+        generate(callback, contextIds, fullyQualifiedTableNames, true);
+    }
+
+    /**
+     * This is the main method for generating code. This method is long running, but progress can be provided and the
+     * method can be cancelled through the ProgressCallback interface.
+     *
+     * @param callback
+     *            an instance of the ProgressCallback interface, or <code>null</code> if you do not require progress
+     *            information
+     * @param contextIds
+     *            a set of Strings containing context ids to run. Only the contexts with an id specified in this list
+     *            will be run. If the list is null or empty, than all contexts are run.
+     * @param fullyQualifiedTableNames
+     *            a set of table names to generate. The elements of the set must be Strings that exactly match what's
+     *            specified in the configuration. For example, if table name = "foo" and schema = "bar", then the fully
+     *            qualified table name is "foo.bar". If the Set is null or empty, then all tables in the configuration
+     *            will be used for code generation.
+     * @param writeFiles
+     *            if true, then the generated files will be written to disk.  If false,
+     *            then the generator runs but nothing is written
+     * @throws SQLException
+     *             the SQL exception
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     * @throws InterruptedException
+     *             if the method is canceled through the ProgressCallback
+     */
+    public void generate(ProgressCallback callback, Set<String> contextIds,
+            Set<String> fullyQualifiedTableNames, boolean writeFiles) throws SQLException,
+            IOException, InterruptedException {
+
+        if (callback == null) {
+            callback = new NullProgressCallback();
+        }
+
+        generatedJavaFiles.clear();
+        generatedXmlFiles.clear();
+        ObjectFactory.reset();
+        RootClassInfo.reset();
+
+        // calculate the contexts to run
+        List<Context> contextsToRun;
+        if (contextIds == null || contextIds.size() == 0) {
+            contextsToRun = configuration.getContexts();
+        } else {
+            contextsToRun = new ArrayList<Context>();
+            for (Context context : configuration.getContexts()) {
+                if (contextIds.contains(context.getId())) {
+                    contextsToRun.add(context);
+                }
+            }
+        }
+
+        // setup custom classloader if required
+        if (configuration.getClassPathEntries().size() > 0) {
+            ClassLoader classLoader = getCustomClassloader(configuration.getClassPathEntries());
+            ObjectFactory.addExternalClassLoader(classLoader);
+        }
+
+        // now run the introspections...
+        int totalSteps = 0;
+        for (Context context : contextsToRun) {
+            totalSteps += context.getIntrospectionSteps();
+        }
+        callback.introspectionStarted(totalSteps);
+
+        for (Context context : contextsToRun) {
+            context.introspectTables(callback, warnings,
+                    fullyQualifiedTableNames);
+        }
+
+        // now run the generates
+        totalSteps = 0;
+        for (Context context : contextsToRun) {
+            totalSteps += context.getGenerationSteps();
+        }
+        callback.generationStarted(totalSteps);
+
+        for (Context context : contextsToRun) {
+            context.generateFiles(callback, generatedJavaFiles,
+                    generatedXmlFiles, warnings);
+        }
+
+        // now save the files
+        if (writeFiles) {
+            callback.saveStarted(generatedXmlFiles.size()
+                + generatedJavaFiles.size());
+
+            for (GeneratedXmlFile gxf : generatedXmlFiles) {
+                projects.add(gxf.getTargetProject());
+                writeGeneratedXmlFile(gxf, callback);
+            }
+
+            for (GeneratedJavaFile gjf : generatedJavaFiles) {
+                projects.add(gjf.getTargetProject());
+                writeGeneratedJavaFile(gjf, callback);
+            }
+
+            for (String project : projects) {
+                shellCallback.refreshProject(project);
+            }
+        }
+
+        callback.done();
+    }
+
+    private void writeGeneratedJavaFile(GeneratedJavaFile gjf, ProgressCallback callback)
+            throws InterruptedException, IOException {
+        File targetFile;
+        String source;
+        try {
+            File directory = shellCallback.getDirectory(gjf
+                    .getTargetProject(), gjf.getTargetPackage());
+            targetFile = new File(directory, gjf.getFileName());
+            if (targetFile.exists()) {
+                if (shellCallback.isMergeSupported()) {
+                    source = shellCallback.mergeJavaFile(gjf
+                            .getFormattedContent(), targetFile
+                            .getAbsolutePath(),
+                            MergeConstants.OLD_ELEMENT_TAGS,
+                            gjf.getFileEncoding());
+                } else if (shellCallback.isOverwriteEnabled()) {
+                    source = gjf.getFormattedContent();
+                    warnings.add(getString("Warning.11", //$NON-NLS-1$
+                            targetFile.getAbsolutePath()));
+                } else {
+                    source = gjf.getFormattedContent();
+                    targetFile = getUniqueFileName(directory, gjf
+                            .getFileName());
+                    warnings.add(getString(
+                            "Warning.2", targetFile.getAbsolutePath())); //$NON-NLS-1$
+                }
+            } else {
+                source = gjf.getFormattedContent();
+            }
+
+            callback.checkCancel();
+            callback.startTask(getString(
+                    "Progress.15", targetFile.getName())); //$NON-NLS-1$
+            writeFile(targetFile, source, gjf.getFileEncoding());
+        } catch (ShellException e) {
+            warnings.add(e.getMessage());
+        }
+    }
+
+    private void writeGeneratedXmlFile(GeneratedXmlFile gxf, ProgressCallback callback)
+            throws InterruptedException, IOException {
+        File targetFile;
+        String source;
+        try {
+            File directory = shellCallback.getDirectory(gxf
+                    .getTargetProject(), gxf.getTargetPackage());
+            targetFile = new File(directory, gxf.getFileName());
+            if (targetFile.exists()) {
+                if (gxf.isMergeable()) {
+                    source = XmlFileMerger.getMergedSource(gxf,
+                            targetFile);
+                } else if (shellCallback.isOverwriteEnabled()) {
+                    source = gxf.getFormattedContent();
+                    warnings.add(getString("Warning.11", //$NON-NLS-1$
+                            targetFile.getAbsolutePath()));
+                } else {
+                    source = gxf.getFormattedContent();
+                    targetFile = getUniqueFileName(directory, gxf
+                            .getFileName());
+                    warnings.add(getString(
+                            "Warning.2", targetFile.getAbsolutePath())); //$NON-NLS-1$
+                }
+            } else {
+                source = gxf.getFormattedContent();
+            }
+
+            callback.checkCancel();
+            callback.startTask(getString(
+                    "Progress.15", targetFile.getName())); //$NON-NLS-1$
+            writeFile(targetFile, source, "UTF-8"); //$NON-NLS-1$
+        } catch (ShellException e) {
+            warnings.add(e.getMessage());
+        }
+    }
+    
+    /**
+     * Writes, or overwrites, the contents of the specified file.
+     *
+     * @param file
+     *            the file
+     * @param content
+     *            the content
+     * @param fileEncoding
+     *            the file encoding
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    private void writeFile(File file, String content, String fileEncoding) throws IOException {
+        FileOutputStream fos = new FileOutputStream(file, false);
+        OutputStreamWriter osw;
+        if (fileEncoding == null) {
+            osw = new OutputStreamWriter(fos);
+        } else {
+            osw = new OutputStreamWriter(fos, fileEncoding);
+        }
+        
+        BufferedWriter bw = new BufferedWriter(osw);
+        bw.write(content);
+        bw.close();
+    }
+
+    /**
+     * Gets the unique file name.
+     *
+     * @param directory
+     *            the directory
+     * @param fileName
+     *            the file name
+     * @return the unique file name
+     */
+    private File getUniqueFileName(File directory, String fileName) {
+        File answer = null;
+
+        // try up to 1000 times to generate a unique file name
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i < 1000; i++) {
+            sb.setLength(0);
+            sb.append(fileName);
+            sb.append('.');
+            sb.append(i);
+
+            File testFile = new File(directory, sb.toString());
+            if (!testFile.exists()) {
+                answer = testFile;
+                break;
+            }
+        }
+
+        if (answer == null) {
+            throw new RuntimeException(getString(
+                    "RuntimeError.3", directory.getAbsolutePath())); //$NON-NLS-1$
+        }
+
+        return answer;
+    }
+
+    /**
+     * Returns the list of generated Java files after a call to one of the generate methods.
+     * This is useful if you prefer to process the generated files yourself and do not want
+     * the generator to write them to disk.
+     *  
+     * @return the list of generated Java files
+     */
+    public List<GeneratedJavaFile> getGeneratedJavaFiles() {
+        return generatedJavaFiles;
+    }
+
+    /**
+     * Returns the list of generated XML files after a call to one of the generate methods.
+     * This is useful if you prefer to process the generated files yourself and do not want
+     * the generator to write them to disk.
+     *  
+     * @return the list of generated XML files
+     */
+    public List<GeneratedXmlFile> getGeneratedXmlFiles() {
+        return generatedXmlFiles;
+    }
 }
