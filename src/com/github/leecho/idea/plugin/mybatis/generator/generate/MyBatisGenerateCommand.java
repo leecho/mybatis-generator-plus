@@ -22,7 +22,6 @@ import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
 import com.github.leecho.idea.plugin.mybatis.generator.model.DbType;
 import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration;
 import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
-import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.config.*;
 import org.mybatis.generator.internal.DefaultShellCallback;
@@ -180,10 +179,10 @@ public class MyBatisGenerateCommand {
 	}
 
 	private String getRelativePath(Project project) {
-		if (entityConfig.getProjectRootPath().equals(project.getBasePath())) {
+		if (entityConfig.getModuleRootPath().equals(project.getBasePath())) {
 			return "";
 		} else {
-			return entityConfig.getProjectRootPath().replace(project.getBasePath() + "/", "") + "/";
+			return entityConfig.getModuleRootPath().replace(project.getBasePath() + "/", "") + "/";
 		}
 	}
 
@@ -196,8 +195,8 @@ public class MyBatisGenerateCommand {
 	private void createFolderForNeed(EntityConfig entityConfig) {
 
 
-		String sourcePath = entityConfig.getProjectRootPath() + "/" + entityConfig.getSourcePath() + "/";
-		String resourcePath = entityConfig.getProjectRootPath() + "/" + entityConfig.getResourcePath() + "/";
+		String sourcePath = entityConfig.getModuleRootPath() + "/" + entityConfig.getSourcePath() + "/";
+		String resourcePath = entityConfig.getModuleRootPath() + "/" + entityConfig.getResourcePath() + "/";
 
 		File sourceFile = new File(sourcePath);
 		if (!sourceFile.exists() && !sourceFile.isDirectory()) {
@@ -351,7 +350,7 @@ public class MyBatisGenerateCommand {
 	 * @return
 	 */
 	private JavaModelGeneratorConfiguration buildModelConfig() {
-		String projectFolder = entityConfig.getProjectRootPath();
+		String projectFolder = entityConfig.getModuleRootPath();
 		String entityPackage = entityConfig.getEntityPackage();
 		String sourcePath = entityConfig.getSourcePath();
 
@@ -373,7 +372,7 @@ public class MyBatisGenerateCommand {
 	 */
 	private SqlMapGeneratorConfiguration buildMapperXmlConfig() {
 
-		String projectFolder = entityConfig.getProjectRootPath();
+		String projectFolder = entityConfig.getModuleRootPath();
 		String mappingXMLPackage = entityConfig.getXmlPackage();
 		String resourcePath = entityConfig.getResourcePath();
 
@@ -406,7 +405,7 @@ public class MyBatisGenerateCommand {
 	 */
 	private JavaClientGeneratorConfiguration buildMapperConfig() {
 
-		String projectFolder = entityConfig.getProjectRootPath();
+		String projectFolder = entityConfig.getModuleRootPath();
 		String mapperPackage = entityConfig.getMapperPackage();
 		String mapperPath = entityConfig.getSourcePath();
 
@@ -472,14 +471,22 @@ public class MyBatisGenerateCommand {
 
 		if (entityConfig.isLombokAnnotation()) {
 			PluginConfiguration lombokPlugin = new PluginConfiguration();
-			lombokPlugin.addProperty("type", "com.softwareloop.mybatis.generator.plugins.LombokPlugin");
-			lombokPlugin.setConfigurationType("com.softwareloop.mybatis.generator.plugins.LombokPlugin");
+			lombokPlugin.addProperty("type", "com.github.leecho.idea.plugin.mybatis.generator.plugin.LombokPlugin");
+			lombokPlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.LombokPlugin");
 			if (entityConfig.isLombokBuilderAnnotation()) {
 				lombokPlugin.addProperty("builder", "true");
 				lombokPlugin.addProperty("allArgsConstructor", "true");
 				lombokPlugin.addProperty("noArgsConstructor", "true");
 			}
 			context.addPluginConfiguration(lombokPlugin);
+		}
+
+		if (entityConfig.isUseExample()) {
+			PluginConfiguration renameExamplePlugin = new PluginConfiguration();
+			renameExamplePlugin.addProperty("type", "com.github.leecho.idea.plugin.mybatis.generator.plugin.RenameExampleClassPlugin");
+			renameExamplePlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.RenameExampleClassPlugin");
+			renameExamplePlugin.addProperty("target", entityConfig.getExamplePackage() + "." + entityConfig.getExampleName());
+			context.addPluginConfiguration(renameExamplePlugin);
 		}
 
 
@@ -546,7 +553,7 @@ public class MyBatisGenerateCommand {
 		StringBuilder sb = new StringBuilder();
 		String mappingXMLPackage = entityConfig.getXmlPackage();
 		String xmlMvnPath = entityConfig.getResourcePath();
-		sb.append(entityConfig.getProjectRootPath() + "/" + xmlMvnPath + "/");
+		sb.append(entityConfig.getModuleRootPath() + "/" + xmlMvnPath + "/");
 
 		if (!StringUtils.isEmpty(mappingXMLPackage)) {
 			sb.append(mappingXMLPackage.replace(".", "/")).append("/");

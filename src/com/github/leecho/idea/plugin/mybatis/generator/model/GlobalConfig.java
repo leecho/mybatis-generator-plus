@@ -2,13 +2,15 @@ package com.github.leecho.idea.plugin.mybatis.generator.model;
 
 public class GlobalConfig {
 
-	private String projectRootPath;
+	private String moduleRootPath;
 	private String sourcePath;
 	private String resourcePath;
 	private String mapperPostfix;
+	private String examplePostfix;
 
 	private String entityPackage;
 	private String mapperPackage;
+	private String examplePackage;
 	private String xmlPackage;
 
 
@@ -262,12 +264,28 @@ public class GlobalConfig {
 		this.lombokBuilderAnnotation = lombokBuilderAnnotation;
 	}
 
-	public String getProjectRootPath() {
-		return projectRootPath;
+	public String getModuleRootPath() {
+		return moduleRootPath;
 	}
 
-	public void setProjectRootPath(String projectRootPath) {
-		this.projectRootPath = projectRootPath;
+	public void setModuleRootPath(String moduleRootPath) {
+		this.moduleRootPath = moduleRootPath;
+	}
+
+	public String getExamplePostfix() {
+		return examplePostfix;
+	}
+
+	public void setExamplePostfix(String examplePostfix) {
+		this.examplePostfix = examplePostfix;
+	}
+
+	public String getExamplePackage() {
+		return examplePackage;
+	}
+
+	public void setExamplePackage(String examplePackage) {
+		this.examplePackage = examplePackage;
 	}
 
 	public static GlobalConfig getDefault() {
@@ -276,6 +294,7 @@ public class GlobalConfig {
 		globalConfig.setResourcePath("src/main/resources");
 		globalConfig.setMapperPostfix("Mapper");
 		globalConfig.setXmlPackage("mapper");
+		globalConfig.setExamplePostfix("Example");
 		globalConfig.setUseExample(true);
 		globalConfig.setComment(true);
 		return globalConfig;

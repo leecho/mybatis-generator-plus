@@ -31,21 +31,34 @@ public class EntityConfig {
 	private String mapperName;
 
 	/**
+	 * dao名称
+	 */
+	private String exampleName;
+
+	/**
 	 * dao后缀
 	 */
 	private String mapperPostfix;
 
 	/**
+	 * dao后缀
+	 */
+	private String examplePostfix;
+
+	/**
 	 * 工程目录
 	 */
-	private String projectRootPath;
+	private String moduleRootPath;
 
 	private String sourcePath;
 	private String resourcePath;
 
+	private String basePackage;
 	private String entityPackage;
 
 	private String mapperPackage;
+
+	private String examplePackage;
 
 	private String xmlPackage;
 
@@ -182,12 +195,12 @@ public class EntityConfig {
 		this.connectorJarPath = connectorJarPath;
 	}
 
-	public String getProjectRootPath() {
-		return projectRootPath;
+	public String getModuleRootPath() {
+		return moduleRootPath;
 	}
 
-	public void setProjectRootPath(String projectRootPath) {
-		this.projectRootPath = projectRootPath;
+	public void setModuleRootPath(String moduleRootPath) {
+		this.moduleRootPath = moduleRootPath;
 	}
 
 	public String getEntityPackage() {
@@ -370,5 +383,37 @@ public class EntityConfig {
 
 	public void setLombokBuilderAnnotation(boolean lombokBuilderAnnotation) {
 		this.lombokBuilderAnnotation = lombokBuilderAnnotation;
+	}
+
+	public String getExamplePackage() {
+		return examplePackage;
+	}
+
+	public void setExamplePackage(String examplePackage) {
+		this.examplePackage = examplePackage;
+	}
+
+	public String getExamplePostfix() {
+		return examplePostfix;
+	}
+
+	public void setExamplePostfix(String examplePostfix) {
+		this.examplePostfix = examplePostfix;
+	}
+
+	public String getExampleName() {
+		return exampleName;
+	}
+
+	public void setExampleName(String exampleName) {
+		this.exampleName = exampleName;
+	}
+
+	public String getBasePackage() {
+		return basePackage;
+	}
+
+	public void setBasePackage(String basePackage) {
+		this.basePackage = basePackage;
 	}
 }

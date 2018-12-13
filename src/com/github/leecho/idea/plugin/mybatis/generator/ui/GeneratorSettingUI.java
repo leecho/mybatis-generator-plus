@@ -9,6 +9,7 @@ import com.intellij.openapi.ui.TextBrowseFolderListener;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiPackage;
+import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBPanel;
@@ -29,12 +30,14 @@ public class GeneratorSettingUI extends JDialog {
 	private TextFieldWithBrowseButton entityPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton mapperPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton xmlPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton projectRootField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton examplePackageField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton moduleRootField = new TextFieldWithBrowseButton();
 
 	private JTextField sourcePathField = new JTextField();
 	private JTextField resourcePathField = new JTextField();
 
-	private JTextField mapperNameField = new JTextField(10);
+	private JTextField mapperPostfixField = new JTextField(10);
+	private JTextField examplePostfixField = new JTextField(10);
 
 	private JCheckBox offsetLimitBox = new JCheckBox("Page(分页)");
 	private JCheckBox commentBox = new JCheckBox("Comment(实体注释)");
@@ -67,11 +70,13 @@ public class GeneratorSettingUI extends JDialog {
 		config = MyBatisGeneratorConfiguration.getInstance(project);
 
 		this.initPathPanel();
+		this.initPostfixPanel();
 		this.initPackagePanel();
 		this.initOptionsPanel();
 
 		GlobalConfig globalConfig = config.getGlobalConfig();
-		mapperNameField.setText(globalConfig.getMapperPostfix());
+		mapperPostfixField.setText(globalConfig.getMapperPostfix());
+		examplePostfixField.setText(globalConfig.getExamplePostfix());
 		entityPackageField.setText(globalConfig.getEntityPackage());
 		mapperPackageField.setText(globalConfig.getMapperPackage());
 		xmlPackageField.setText(globalConfig.getXmlPackage());
@@ -100,7 +105,6 @@ public class GeneratorSettingUI extends JDialog {
 
 	private void initOptionsPanel() {
 		JBPanel optionsPanel = new JBPanel(new GridLayout(8, 2, 10, 10));
-		optionsPanel.setBorder(BorderFactory.createTitledBorder("Options"));
 
 		optionsPanel.add(offsetLimitBox);
 		optionsPanel.add(commentBox);
@@ -118,11 +122,14 @@ public class GeneratorSettingUI extends JDialog {
 		optionsPanel.add(mysql_8Box);
 		optionsPanel.add(lombokAnnotationBox);
 		optionsPanel.add(lombokBuilderAnnotationBox);
+
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Options");
+		contentPanel.add(separator);
 		contentPanel.add(optionsPanel);
 	}
 
 	private void initPathPanel() {
-
 
 		JPanel sourcePathPanel = new JPanel();
 		sourcePathPanel.setLayout(new BoxLayout(sourcePathPanel, BoxLayout.X_AXIS));
@@ -140,10 +147,38 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel pathPanel = new JPanel();
 		pathPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
-		pathPanel.setBorder(BorderFactory.createTitledBorder("Path"));
-		pathPanel.add(resourcePathPanel);
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Path");
 		pathPanel.add(sourcePathPanel);
+		pathPanel.add(resourcePathPanel);
+		contentPanel.add(separator);
 		contentPanel.add(pathPanel);
+	}
+
+	private void initPostfixPanel() {
+
+		JPanel mapperPostfixPanel = new JPanel();
+		mapperPostfixPanel.setLayout(new BoxLayout(mapperPostfixPanel, BoxLayout.X_AXIS));
+		JBLabel mapperPostfixLabel = new JBLabel("Mapper Postfix:");
+		mapperPostfixLabel.setPreferredSize(new Dimension(200, 20));
+		mapperPostfixPanel.add(mapperPostfixLabel);
+		mapperPostfixPanel.add(mapperPostfixField);
+
+		JPanel examplePostfixPanel = new JPanel();
+		examplePostfixPanel.setLayout(new BoxLayout(examplePostfixPanel, BoxLayout.X_AXIS));
+		JBLabel examplePostfixLabel = new JBLabel("Example Postfix:");
+		examplePostfixLabel.setPreferredSize(new Dimension(200, 20));
+		examplePostfixPanel.add(examplePostfixLabel);
+		examplePostfixPanel.add(examplePostfixField);
+
+		JPanel postfixPanel = new JPanel();
+		postfixPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Postfix");
+		postfixPanel.add(mapperPostfixPanel);
+		postfixPanel.add(examplePostfixPanel);
+		contentPanel.add(separator);
+		contentPanel.add(postfixPanel);
 	}
 
 	private void initPackagePanel() {
@@ -152,22 +187,22 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel projectRootPanel = new JPanel();
 		projectRootPanel.setLayout(new BoxLayout(projectRootPanel, BoxLayout.X_AXIS));
-		JBLabel projectRootLabel = new JBLabel("Project Root:");
+		JBLabel projectRootLabel = new JBLabel("Module Root:");
 		projectRootLabel.setPreferredSize(new Dimension(200, 20));
-		projectRootField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
+		moduleRootField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				super.actionPerformed(e);
-				projectRootField.setText(projectRootField.getText().replaceAll("\\\\", "/"));
+				moduleRootField.setText(moduleRootField.getText().replaceAll("\\\\", "/"));
 			}
 		});
-		if (globalConfig != null && !StringUtils.isEmpty(globalConfig.getProjectRootPath())) {
-			projectRootField.setText(globalConfig.getProjectRootPath());
+		if (globalConfig != null && !StringUtils.isEmpty(globalConfig.getModuleRootPath())) {
+			moduleRootField.setText(globalConfig.getModuleRootPath());
 		} else {
-			projectRootField.setText(project.getBasePath());
+			moduleRootField.setText(project.getBasePath());
 		}
 		projectRootPanel.add(projectRootLabel);
-		projectRootPanel.add(projectRootField);
+		projectRootPanel.add(moduleRootField);
 
 		JPanel entityPackagePanel = new JPanel();
 		entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
@@ -199,6 +234,21 @@ public class GeneratorSettingUI extends JDialog {
 		mapperPackagePanel.add(mapperPackageLabel);
 		mapperPackagePanel.add(mapperPackageField);
 
+		JPanel examplePackagePanel = new JPanel();
+		examplePackagePanel.setLayout(new BoxLayout(examplePackagePanel, BoxLayout.X_AXIS));
+		JLabel examplePackageLabel = new JLabel("Example Class Package:");
+		examplePackageLabel.setPreferredSize(new Dimension(200, 20));
+		examplePackageField.addActionListener(e -> {
+			final PackageChooserDialog chooser = new PackageChooserDialog("Select Example Package", project);
+			chooser.selectPackage(examplePackageField.getText());
+			chooser.show();
+			final PsiPackage psiPackage = chooser.getSelectedPackage();
+			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
+			examplePackageField.setText(packageName);
+		});
+		examplePackagePanel.add(examplePackageLabel);
+		examplePackagePanel.add(examplePackageField);
+
 		JPanel xmlPackagePanel = new JPanel();
 		xmlPackagePanel.setLayout(new BoxLayout(xmlPackagePanel, BoxLayout.X_AXIS));
 		JLabel xmlPackageLabel = new JLabel("Mapper Xml Package:");
@@ -216,11 +266,15 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel packagePanel = new JPanel();
 		packagePanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
-		packagePanel.setBorder(BorderFactory.createTitledBorder("Package"));
+		//packagePanel.setBorder(BorderFactory.createTitledBorder("Package"));
 		packagePanel.add(projectRootPanel);
 		packagePanel.add(entityPackagePanel);
-		packagePanel.add(mapperPackagePanel);
+		packagePanel.add(examplePackagePanel);
 		packagePanel.add(xmlPackagePanel);
+
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Package");
+		contentPanel.add(separator);
 		contentPanel.add(packagePanel);
 	}
 
@@ -244,7 +298,8 @@ public class GeneratorSettingUI extends JDialog {
 
 	public void apply() {
 		GlobalConfig globalConfig = new GlobalConfig();
-		globalConfig.setMapperPostfix(mapperNameField.getText());
+		globalConfig.setMapperPostfix(mapperPostfixField.getText());
+		globalConfig.setExamplePostfix(examplePostfixField.getText());
 		globalConfig.setEntityPackage(entityPackageField.getText());
 		globalConfig.setMapperPackage(mapperPackageField.getText());
 		globalConfig.setXmlPackage(xmlPackageField.getText());

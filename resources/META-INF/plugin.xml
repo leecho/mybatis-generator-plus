@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.github.leecho.idea.plugin.mybatis.generator</id>
     <name>MyBatis Generator Plus</name>
-    <version>1.0</version>
+    <version>1.1</version>
     <vendor email="leecho571@gmail.com" url="http://wwww.github.com/leecho">Leecho</vendor>
 
     <description>

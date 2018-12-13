@@ -24,16 +24,20 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPackage;
+import com.intellij.ui.SeparatorWithText;
+import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextField;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,13 +58,19 @@ public class GenerateSettingUI extends DialogWrapper {
 	private JPanel contentPane = new JBPanel<>();
 
 	private JTextField tableNameField = new JBTextField(20);
-	private TextFieldWithBrowseButton projectRootField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton moduleRootField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton basePackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton entityPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton mapperPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton xmlPackageField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton examplePackageField = new TextFieldWithBrowseButton();
+	private JTextField xmlPackageField = new JTextField();
 	private JTextField mapperNameField = new JBTextField(20);
 	private JTextField entityNameField = new JBTextField(20);
+	private JTextField exampleNameField = new JBTextField(20);
 	private JTextField primaryKeyField = new JBTextField(20);
+
+	private JPanel examplePackagePanel = new JPanel();
+	private JPanel exampleNamePanel = new JPanel();
 
 	private JLabel connectStatusLabel = new JLabel();
 
@@ -116,12 +126,14 @@ public class GenerateSettingUI extends DialogWrapper {
 		if (entityConfig == null) {
 			//初始化配置
 			entityConfig = new EntityConfig();
-			entityConfig.setProjectRootPath(globalConfig.getProjectRootPath());
+			entityConfig.setModuleRootPath(globalConfig.getModuleRootPath());
 			entityConfig.setSourcePath(globalConfig.getSourcePath());
 			entityConfig.setResourcePath(globalConfig.getResourcePath());
 			entityConfig.setEntityPackage(globalConfig.getEntityPackage());
 			entityConfig.setMapperPackage(globalConfig.getMapperPackage());
 			entityConfig.setMapperPostfix(globalConfig.getMapperPostfix());
+			entityConfig.setExamplePostfix(globalConfig.getExamplePostfix());
+			entityConfig.setExamplePackage(globalConfig.getExamplePackage());
 			entityConfig.setXmlPackage(globalConfig.getXmlPackage());
 
 			entityConfig.setOffsetLimit(globalConfig.isOffsetLimit());
@@ -159,8 +171,8 @@ public class GenerateSettingUI extends DialogWrapper {
 	private List<String> validateSetting() {
 		List<String> errors = new ArrayList<>();
 
-		if (StringUtils.isEmpty(projectRootField.getText())) {
-			errors.add("Project root must not be null");
+		if (StringUtils.isEmpty(moduleRootField.getText())) {
+			errors.add("Module root must not be null");
 		}
 
 		if (StringUtils.isEmpty(entityNameField.getText())) {
@@ -183,6 +195,14 @@ public class GenerateSettingUI extends DialogWrapper {
 			errors.add("Mapper xml package must not be null");
 		}
 
+		if(useExampleBox.getSelectedObjects() != null){
+			if(StringUtils.isEmpty(exampleNameField.getText())){
+				errors.add("Example name must not be null");
+			}
+			if(StringUtils.isEmpty(examplePackageField.getText())){
+				errors.add("Example package must not be null");
+			}
+		}
 		return errors;
 	}
 
@@ -216,6 +236,11 @@ public class GenerateSettingUI extends DialogWrapper {
 
 		if (overrideBox.getSelectedObjects() != null) {
 			int confirm = Messages.showOkCancelDialog(project, "The exists file will be overwrite ,Confirm start generate?", "Mybatis Generator Plus", Messages.getQuestionIcon());
+			if (confirm == 2) {
+				return;
+			}
+		}else{
+			int confirm = Messages.showOkCancelDialog(project, "Confirm start generate?", "Mybatis Generator Plus", Messages.getQuestionIcon());
 			if (confirm == 2) {
 				return;
 			}
@@ -265,7 +290,10 @@ public class GenerateSettingUI extends DialogWrapper {
 
 	private void initOptionsPanel() {
 		JBPanel optionsPanel = new JBPanel(new GridLayout(8, 2, 10, 10));
-		optionsPanel.setBorder(BorderFactory.createTitledBorder("Options"));
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Options");
+		separator.setLabelFor(optionsPanel);
+		contentPane.add(separator);
 
 		optionsPanel.add(offsetLimitBox);
 		optionsPanel.add(commentBox);
@@ -283,6 +311,11 @@ public class GenerateSettingUI extends DialogWrapper {
 		optionsPanel.add(mysql8Box);
 		optionsPanel.add(lombokAnnotationBox);
 		optionsPanel.add(lombokBuilderAnnotationBox);
+
+		useExampleBox.addChangeListener(e -> {
+			exampleNamePanel.setVisible(useExampleBox.getSelectedObjects() != null);
+			examplePackagePanel.setVisible(useExampleBox.getSelectedObjects() != null);
+		});
 
 		offsetLimitBox.setSelected(entityConfig.isOffsetLimit());
 		commentBox.setSelected(entityConfig.isComment());
@@ -304,31 +337,58 @@ public class GenerateSettingUI extends DialogWrapper {
 		contentPane.add(optionsPanel);
 	}
 
+	/**
+	 * 初始化Package组件
+	 */
 	private void initPackagePanel() {
 
-		JPanel projectRootPanel = new JPanel();
-		projectRootPanel.setLayout(new BoxLayout(projectRootPanel, BoxLayout.X_AXIS));
-		JBLabel projectRootLabel = new JBLabel("Project Root:");
-		projectRootLabel.setPreferredSize(new Dimension(200, 20));
-		projectRootField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
+		JPanel moduleRootPanel = new JPanel();
+		moduleRootPanel.setLayout(new BoxLayout(moduleRootPanel, BoxLayout.X_AXIS));
+		JBLabel projectRootLabel = new JBLabel("Module Root:");
+		projectRootLabel.setPreferredSize(new Dimension(150, 20));
+		moduleRootField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				super.actionPerformed(e);
-				projectRootField.setText(projectRootField.getText().replaceAll("\\\\", "/"));
+				moduleRootField.setText(moduleRootField.getText().replaceAll("\\\\", "/"));
 			}
 		});
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getProjectRootPath())) {
-			projectRootField.setText(entityConfig.getProjectRootPath());
+		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getModuleRootPath())) {
+			moduleRootField.setText(entityConfig.getModuleRootPath());
 		} else {
-			projectRootField.setText(project.getBasePath());
+			moduleRootField.setText(project.getBasePath());
 		}
-		projectRootPanel.add(projectRootLabel);
-		projectRootPanel.add(projectRootField);
+		moduleRootPanel.add(projectRootLabel);
+		moduleRootPanel.add(moduleRootField);
+
+		JPanel basePackagePanel = new JPanel();
+		basePackagePanel.setLayout(new BoxLayout(basePackagePanel, BoxLayout.X_AXIS));
+		JBLabel basePackageLabel = new JBLabel("Base Package:");
+		basePackageLabel.setPreferredSize(new Dimension(150, 20));
+		basePackageField.setEditable(false);
+		basePackageField.addActionListener(e -> {
+			final PackageChooserDialog chooser = new PackageChooserDialog("Select Base Package", project);
+			chooser.selectPackage(basePackageField.getText());
+			chooser.show();
+			final PsiPackage psiPackage = chooser.getSelectedPackage();
+			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
+			basePackageField.setText(packageName);
+			entityPackageField.setText(packageName + ".domain");
+			mapperPackageField.setText(packageName + "." + getMapperPostfix().toLowerCase());
+			examplePackageField.setText(packageName + "." + getExamplePostfix().toLowerCase());
+		});
+		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getBasePackage())) {
+			basePackageField.setText(entityConfig.getBasePackage());
+		} else {
+			basePackageField.setText("");
+		}
+		basePackagePanel.add(basePackageLabel);
+		basePackagePanel.add(basePackageField);
 
 		JPanel entityPackagePanel = new JPanel();
 		entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
-		JBLabel entityPackageLabel = new JBLabel("Entity Class Package:");
-		entityPackageLabel.setPreferredSize(new Dimension(200, 20));
+		JBLabel entityPackageLabel = new JBLabel("Entity Package:");
+		entityPackageLabel.setPreferredSize(new Dimension(150, 20));
 		entityPackageField.addActionListener(e -> {
 			final PackageChooserDialog chooser = new PackageChooserDialog("Select Entity Package", project);
 			chooser.selectPackage(entityPackageField.getText());
@@ -347,13 +407,14 @@ public class GenerateSettingUI extends DialogWrapper {
 
 		JPanel mapperPackagePanel = new JPanel();
 		mapperPackagePanel.setLayout(new BoxLayout(mapperPackagePanel, BoxLayout.X_AXIS));
-		JLabel mapperPackageLabel = new JLabel("Mapper Class Package:");
-		mapperPackageLabel.setPreferredSize(new Dimension(200, 20));
-		mapperPackageField.addActionListener(e -> {
-			final PackageChooserDialog chooser = new PackageChooserDialog("Select Mapper Package", project);
-			chooser.selectPackage(mapperPackageField.getText());
-			chooser.show();
-			final PsiPackage psiPackage = chooser.getSelectedPackage();
+		JLabel mapperPackageLabel = new JLabel("Mapper Package:");
+		mapperPackageLabel.setPreferredSize(new Dimension(150, 20));
+		mapperPackageField.addActionListener(event -> {
+			final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Mapper Package", project);
+			packageChooserDialog.selectPackage(mapperPackageField.getText());
+			packageChooserDialog.show();
+
+			final PsiPackage psiPackage = packageChooserDialog.getSelectedPackage();
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
 			mapperPackageField.setText(packageName);
 		});
@@ -365,35 +426,54 @@ public class GenerateSettingUI extends DialogWrapper {
 		mapperPackagePanel.add(mapperPackageLabel);
 		mapperPackagePanel.add(mapperPackageField);
 
+		examplePackagePanel.setLayout(new BoxLayout(examplePackagePanel, BoxLayout.X_AXIS));
+
+		examplePackageField.addActionListener(e -> {
+			final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Example Package", project);
+			packageChooserDialog.selectPackage(examplePackageField.getText());
+			packageChooserDialog.show();
+
+			final PsiPackage psiPackage = packageChooserDialog.getSelectedPackage();
+			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
+			examplePackageField.setText(packageName);
+		});
+
+		JLabel examplePackageLabel = new JLabel("Example Package:");
+		examplePackageLabel.setPreferredSize(new Dimension(150, 20));
+		examplePackageField.setText(entityConfig.getExamplePackage());
+		examplePackagePanel.add(examplePackageLabel);
+		examplePackagePanel.add(examplePackageField);
+		examplePackagePanel.setVisible(entityConfig.isUseExample());
+
 		JPanel xmlPackagePanel = new JPanel();
 		xmlPackagePanel.setLayout(new BoxLayout(xmlPackagePanel, BoxLayout.X_AXIS));
-		JLabel xmlPackageLabel = new JLabel("Mapper Xml Package:");
-		xmlPackageLabel.setPreferredSize(new Dimension(200, 20));
-		xmlPackageField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				super.actionPerformed(e);
-				xmlPackageField.setText(xmlPackageField.getText().replaceAll("\\\\", "/"));
-			}
-		});
+		JLabel xmlPackageLabel = new JLabel("Xml Package:");
+		xmlPackageLabel.setPreferredSize(new Dimension(150, 20));
 		xmlPackageField.setText(entityConfig.getXmlPackage());
 		xmlPackagePanel.add(xmlPackageLabel);
 		xmlPackagePanel.add(xmlPackageField);
 
 		JPanel packagePanel = new JPanel();
 		packagePanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
-		packagePanel.setBorder(BorderFactory.createTitledBorder("Package"));
-		packagePanel.add(projectRootPanel);
+		packagePanel.add(moduleRootPanel);
+		packagePanel.add(basePackagePanel);
 		packagePanel.add(entityPackagePanel);
 		packagePanel.add(mapperPackagePanel);
+		packagePanel.add(examplePackagePanel);
 		packagePanel.add(xmlPackagePanel);
+
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Package");
+		contentPane.add(separator);
 		contentPane.add(packagePanel);
 	}
 
 	private void initEntityPanel(String tableName, String modelName, String primaryKey) {
 		JPanel entityPanel = new JPanel();
 		entityPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
-		entityPanel.setBorder(BorderFactory.createTitledBorder("Entity"));
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Entity");
+		contentPane.add(separator);
 		contentPane.add(entityPanel);
 
 		//Table
@@ -401,7 +481,7 @@ public class GenerateSettingUI extends DialogWrapper {
 		tableNamePanel.setLayout(new BoxLayout(tableNamePanel, BoxLayout.X_AXIS));
 		JLabel tableLabel = new JLabel("Table Name:");
 		tableLabel.setLabelFor(tableNameField);
-		tableLabel.setPreferredSize(new Dimension(200, 20));
+		tableLabel.setPreferredSize(new Dimension(150, 20));
 		tableNamePanel.add(tableLabel);
 		tableNamePanel.add(tableNameField);
 		if (psiElements.length > 1) {
@@ -416,28 +496,14 @@ public class GenerateSettingUI extends DialogWrapper {
 				String entityName = StringUtils.dbStringToCamelStyle(tableNameField.getText());
 				entityNameField.setText(entityName);
 				mapperNameField.setText(getMapperName(entityName));
+				exampleNameField.setText(getExampleName(entityName));
 			}
 		});
 
-		//PrimaryKey
-		/*JPanel primaryKeyPanel = new JPanel();
-		primaryKeyPanel.setLayout(new BoxLayout(primaryKeyPanel, BoxLayout.X_AXIS));
-		JLabel primaryKeyLabel = new JLabel("Primary Key:");
-		primaryKeyLabel.setPreferredSize(new Dimension(200, 20));
-		primaryKeyLabel.setLabelFor(primaryKeyField);
-		primaryKeyPanel.add(primaryKeyLabel);
-		primaryKeyPanel.add(primaryKeyField);
-		if (psiElements.length > 1) {
-			primaryKeyField.addFocusListener(new JTextFieldHintListener(primaryKeyField, "eg:primary key"));
-		} else {
-			primaryKeyField.setText(primaryKey);
-		}*/
-
-		//EntityName
 		JPanel entityNamePanel = new JPanel();
 		entityNamePanel.setLayout(new BoxLayout(entityNamePanel, BoxLayout.X_AXIS));
 		JLabel entityNameLabel = new JLabel("Entity Name:");
-		entityNameLabel.setPreferredSize(new Dimension(200, 20));
+		entityNameLabel.setPreferredSize(new Dimension(150, 20));
 		entityNamePanel.add(entityNameLabel);
 		entityNamePanel.add(entityNameField);
 		entityPanel.add(entityNamePanel);
@@ -450,6 +516,7 @@ public class GenerateSettingUI extends DialogWrapper {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				mapperNameField.setText(getMapperName(entityNameField.getText()));
+				exampleNameField.setText(getExampleName(entityNameField.getText()));
 			}
 		});
 
@@ -457,7 +524,7 @@ public class GenerateSettingUI extends DialogWrapper {
 		JPanel mapperNamePanel = new JPanel();
 		mapperNamePanel.setLayout(new BoxLayout(mapperNamePanel, BoxLayout.X_AXIS));
 		JLabel mapperNameLabel = new JLabel("Mapper Name:");
-		mapperNameLabel.setPreferredSize(new Dimension(200, 20));
+		mapperNameLabel.setPreferredSize(new Dimension(150, 20));
 		mapperNameLabel.setLabelFor(entityNameField);
 		mapperNamePanel.add(mapperNameLabel);
 		mapperNamePanel.add(mapperNameField);
@@ -471,23 +538,45 @@ public class GenerateSettingUI extends DialogWrapper {
 			mapperNameField.setText(getMapperName(modelName));
 		}
 
+		exampleNamePanel.setLayout(new BoxLayout(exampleNamePanel, BoxLayout.X_AXIS));
+		JLabel exampleNameLabel = new JLabel("Example Name:");
+		exampleNameLabel.setPreferredSize(new Dimension(150, 20));
+		exampleNameLabel.setLabelFor(entityNameField);
+		exampleNamePanel.add(exampleNameLabel);
+		exampleNamePanel.add(exampleNameField);
+		if (psiElements.length > 1) {
+			if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getExamplePostfix())) {
+				exampleNameField.addFocusListener(new JTextFieldHintListener(exampleNameField, "eg:DbTable" + entityConfig.getExamplePostfix()));
+			} else {
+				exampleNameField.addFocusListener(new JTextFieldHintListener(exampleNameField, "eg:DbTable" + "Example"));
+			}
+		} else {
+			exampleNameField.setText(getExampleName(modelName));
+		}
+
+		exampleNamePanel.setVisible(entityConfig.isUseExample());
+
 		entityPanel.add(tableNamePanel);
-		//entityPanel.add(primaryKeyPanel);
 		entityPanel.add(entityNamePanel);
 		entityPanel.add(mapperNamePanel);
+		entityPanel.add(exampleNamePanel);
 	}
 
 	public void generate(RawConnectionConfig connectionConfig) {
 		entityConfig.setName(tableNameField.getText());
 		entityConfig.setTableName(tableNameField.getText());
-		entityConfig.setProjectRootPath(projectRootField.getText());
+		entityConfig.setModuleRootPath(moduleRootField.getText());
 
+		entityConfig.setBasePackage(basePackageField.getText());
 		entityConfig.setEntityPackage(entityPackageField.getText());
 		entityConfig.setMapperPackage(mapperPackageField.getText());
+		entityConfig.setExamplePackage(examplePackageField.getText());
 		entityConfig.setXmlPackage(xmlPackageField.getText());
+
 		entityConfig.setMapperName(mapperNameField.getText());
 		entityConfig.setEntityName(entityNameField.getText());
 		entityConfig.setPrimaryKey(primaryKeyField.getText());
+		entityConfig.setExampleName(exampleNameField.getText());
 
 		entityConfig.setOffsetLimit(offsetLimitBox.getSelectedObjects() != null);
 		entityConfig.setComment(commentBox.getSelectedObjects() != null);
@@ -518,6 +607,30 @@ public class GenerateSettingUI extends DialogWrapper {
 			return entityName + entityConfig.getMapperPostfix();
 		} else {
 			return (entityName + "Mapper");
+		}
+	}
+
+	private String getMapperPostfix() {
+		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getMapperPostfix())) {
+			return entityConfig.getMapperPostfix();
+		} else {
+			return "Mapper";
+		}
+	}
+
+	private String getExamplePostfix() {
+		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getExamplePostfix())) {
+			return entityConfig.getExamplePostfix();
+		} else {
+			return "Example";
+		}
+	}
+
+	private String getExampleName(String entityName) {
+		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getExamplePostfix())) {
+			return entityName + entityConfig.getExamplePostfix();
+		} else {
+			return (entityName + "Example");
 		}
 	}
 
