@@ -300,6 +300,7 @@ public class GeneratorSettingUI extends JDialog {
 
 	public void apply() {
 		GlobalConfig globalConfig = new GlobalConfig();
+		globalConfig.setModuleRootPath(moduleRootField.getText());
 		globalConfig.setMapperPostfix(mapperPostfixField.getText());
 		globalConfig.setExamplePostfix(examplePostfixField.getText());
 		globalConfig.setEntityPackage(entityPackageField.getText());
