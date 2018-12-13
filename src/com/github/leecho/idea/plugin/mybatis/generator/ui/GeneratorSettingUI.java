@@ -79,6 +79,7 @@ public class GeneratorSettingUI extends JDialog {
 		examplePostfixField.setText(globalConfig.getExamplePostfix());
 		entityPackageField.setText(globalConfig.getEntityPackage());
 		mapperPackageField.setText(globalConfig.getMapperPackage());
+		examplePackageField.setText(globalConfig.getEntityPackage());
 		xmlPackageField.setText(globalConfig.getXmlPackage());
 
 		sourcePathField.setText(globalConfig.getSourcePath());
@@ -269,6 +270,7 @@ public class GeneratorSettingUI extends JDialog {
 		//packagePanel.setBorder(BorderFactory.createTitledBorder("Package"));
 		packagePanel.add(projectRootPanel);
 		packagePanel.add(entityPackagePanel);
+		packagePanel.add(mapperPackagePanel);
 		packagePanel.add(examplePackagePanel);
 		packagePanel.add(xmlPackagePanel);
 
@@ -302,6 +304,7 @@ public class GeneratorSettingUI extends JDialog {
 		globalConfig.setExamplePostfix(examplePostfixField.getText());
 		globalConfig.setEntityPackage(entityPackageField.getText());
 		globalConfig.setMapperPackage(mapperPackageField.getText());
+		globalConfig.setExamplePackage(examplePackageField.getText());
 		globalConfig.setXmlPackage(xmlPackageField.getText());
 		globalConfig.setOffsetLimit(offsetLimitBox.getSelectedObjects() != null);
 		globalConfig.setComment(commentBox.getSelectedObjects() != null);

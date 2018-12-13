@@ -154,7 +154,7 @@ public class GenerateSettingUI extends DialogWrapper {
 			entityConfig.setLombokBuilderAnnotation(globalConfig.isLombokBuilderAnnotation());
 		}
 
-		contentPane.setPreferredSize(new Dimension(600, 500));
+		contentPane.setPreferredSize(new Dimension(700, 500));
 		contentPane.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
 
 		//initDatabasePanel();
