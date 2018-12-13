@@ -79,7 +79,7 @@ public class GeneratorSettingUI extends JDialog {
 		examplePostfixField.setText(globalConfig.getExamplePostfix());
 		entityPackageField.setText(globalConfig.getEntityPackage());
 		mapperPackageField.setText(globalConfig.getMapperPackage());
-		examplePackageField.setText(globalConfig.getEntityPackage());
+		examplePackageField.setText(globalConfig.getExamplePackage());
 		xmlPackageField.setText(globalConfig.getXmlPackage());
 
 		sourcePathField.setText(globalConfig.getSourcePath());
