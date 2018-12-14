@@ -14,6 +14,7 @@ import org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl;
 import org.mybatis.generator.internal.types.JdbcTypeNameTranslator;
 
 import javax.swing.*;
+import java.sql.Types;
 import java.util.ArrayList;
 
 /**
@@ -87,7 +88,13 @@ public class ColumnSettingUI extends DialogWrapper {
 				property = property.substring(0, 1).toLowerCase() + property.substring(1);
 				columnSetting.setJavaProperty(property);
 				IntrospectedColumn introspectedColumn = new IntrospectedColumn();
-				introspectedColumn.setJdbcType(JdbcTypeNameTranslator.getJdbcType(dasColumn.getDataType().typeName.toUpperCase()));
+				String typeName = dasColumn.getDataType().typeName.toUpperCase();
+				if("DATETIME".equals(typeName)){
+					introspectedColumn.setJdbcType(Types.TIMESTAMP);
+				}else{
+					introspectedColumn.setJdbcType(JdbcTypeNameTranslator.getJdbcType(typeName));
+				}
+
 				introspectedColumn.setLength(dasColumn.getDataType().getLength());
 				introspectedColumn.setScale(dasColumn.getDataType().getScale());
 				columnSetting.setJdbcType(resolver.calculateJdbcTypeName(introspectedColumn));
