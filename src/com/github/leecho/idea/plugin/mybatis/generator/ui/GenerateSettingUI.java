@@ -24,7 +24,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPackage;
-import com.intellij.ui.SeparatorWithText;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
@@ -32,12 +31,8 @@ import com.intellij.ui.components.JBTextField;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +53,7 @@ public class GenerateSettingUI extends DialogWrapper {
 	private JPanel contentPane = new JBPanel<>();
 
 	private JTextField tableNameField = new JBTextField(20);
+	private JButton columnButton = new JButton("Column Setting");
 	private TextFieldWithBrowseButton moduleRootField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton basePackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton entityPackageField = new TextFieldWithBrowseButton();
@@ -333,7 +329,6 @@ public class GenerateSettingUI extends DialogWrapper {
 		mysql8Box.setSelected(entityConfig.isMysql8());
 		lombokAnnotationBox.setSelected(entityConfig.isLombokAnnotation());
 		lombokBuilderAnnotationBox.setSelected(entityConfig.isLombokBuilderAnnotation());
-
 		contentPane.add(optionsPanel);
 	}
 
@@ -484,6 +479,14 @@ public class GenerateSettingUI extends DialogWrapper {
 		tableLabel.setPreferredSize(new Dimension(150, 20));
 		tableNamePanel.add(tableLabel);
 		tableNamePanel.add(tableNameField);
+		tableNamePanel.add(columnButton);
+
+		PsiElement psiElement = psiElements[0];
+		TableInfo tableInfo = new TableInfo((DbTable) psiElement);
+		columnButton.addActionListener(e -> {
+			ColumnSettingUI columnSettingUI = new ColumnSettingUI(anActionEvent.getProject(), entityConfig,tableInfo);
+			columnSettingUI.showAndGet();
+		});
 		if (psiElements.length > 1) {
 			tableNameField.addFocusListener(new JTextFieldHintListener(tableNameField, "eg:db_table"));
 		} else {

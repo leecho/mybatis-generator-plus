@@ -1,5 +1,8 @@
 package com.github.leecho.idea.plugin.mybatis.generator.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 界面配置
  */
@@ -62,7 +65,7 @@ public class EntityConfig {
 
 	private String xmlPackage;
 
-
+	private Map<String, ColumnSetting> columnSettings = new HashMap<>();
 	/**
 	 * 是否分页
 	 */
@@ -415,5 +418,13 @@ public class EntityConfig {
 
 	public void setBasePackage(String basePackage) {
 		this.basePackage = basePackage;
+	}
+
+	public Map<String, ColumnSetting> getColumnSettings() {
+		return columnSettings;
+	}
+
+	public void setColumnSettings(Map<String, ColumnSetting> columnSettings) {
+		this.columnSettings = columnSettings;
 	}
 }

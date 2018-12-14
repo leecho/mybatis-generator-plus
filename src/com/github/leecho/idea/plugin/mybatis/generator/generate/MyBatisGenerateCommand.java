@@ -314,6 +314,21 @@ public class MyBatisGenerateCommand {
 			}
 		}
 
+		if(entityConfig.getColumnSettings().size() > 0){
+			entityConfig.getColumnSettings().forEach((key, value) -> {
+				if(value.getIgnore()){
+					tableConfig.addIgnoredColumn(new IgnoredColumn(value.getColumn()));
+				}	else{
+					ColumnOverride override = new ColumnOverride(value.getColumn());
+					override.setJavaProperty(value.getJavaProperty());
+					override.setJavaType(value.getJavaType());
+					override.setJdbcType(value.getJdbcType());
+					tableConfig.addColumnOverride(override);
+				}
+
+			});
+		}
+
 		if ("org.postgresql.Driver".equals(driverClass)) {
 			tableConfig.setDelimitIdentifiers(true);
 		}
