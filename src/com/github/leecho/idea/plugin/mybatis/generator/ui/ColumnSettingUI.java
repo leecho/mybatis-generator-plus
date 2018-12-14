@@ -91,10 +91,11 @@ public class ColumnSettingUI extends DialogWrapper {
 				String typeName = dasColumn.getDataType().typeName.toUpperCase();
 				if("DATETIME".equals(typeName)){
 					introspectedColumn.setJdbcType(Types.TIMESTAMP);
+				}else if("INT".equals(typeName)){
+					introspectedColumn.setJdbcType(Types.INTEGER);
 				}else{
 					introspectedColumn.setJdbcType(JdbcTypeNameTranslator.getJdbcType(typeName));
 				}
-
 				introspectedColumn.setLength(dasColumn.getDataType().getLength());
 				introspectedColumn.setScale(dasColumn.getDataType().getScale());
 				columnSetting.setJdbcType(resolver.calculateJdbcTypeName(introspectedColumn));
