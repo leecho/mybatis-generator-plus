@@ -5,6 +5,7 @@ import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorC
 import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
 import com.intellij.ide.util.PackageChooserDialog;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextBrowseFolderListener;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.ui.VerticalFlowLayout;
@@ -27,7 +28,7 @@ public class GeneratorSettingUI extends JDialog {
 
 	private Project project;
 
-	private TextFieldWithBrowseButton entityPackageField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton domainPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton mapperPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton xmlPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton examplePackageField = new TextFieldWithBrowseButton();
@@ -73,11 +74,12 @@ public class GeneratorSettingUI extends JDialog {
 		this.initPostfixPanel();
 		this.initPackagePanel();
 		this.initOptionsPanel();
+		this.initClearCachePanel();
 
 		GlobalConfig globalConfig = config.getGlobalConfig();
 		mapperPostfixField.setText(globalConfig.getMapperPostfix());
 		examplePostfixField.setText(globalConfig.getExamplePostfix());
-		entityPackageField.setText(globalConfig.getEntityPackage());
+		domainPackageField.setText(globalConfig.getDomainPackage());
 		mapperPackageField.setText(globalConfig.getMapperPackage());
 		examplePackageField.setText(globalConfig.getExamplePackage());
 		xmlPackageField.setText(globalConfig.getXmlPackage());
@@ -156,6 +158,30 @@ public class GeneratorSettingUI extends JDialog {
 		contentPanel.add(pathPanel);
 	}
 
+	private void initClearCachePanel() {
+
+		JPanel clearCachePanel = new JPanel();
+		clearCachePanel.setLayout(new BoxLayout(clearCachePanel, BoxLayout.X_AXIS));
+		JButton clearCacheButton = new JButton("Clear Table Cache");
+		JBLabel clearCacheLabel = new JBLabel("");
+		clearCachePanel.add(clearCacheButton);
+		clearCachePanel.add(clearCacheLabel);
+
+		clearCacheButton.addActionListener(e -> {
+			int confirm = Messages.showOkCancelDialog(project, "Confirm table clear cache?", "Mybatis Generator Plus", Messages.getQuestionIcon());
+			if (confirm == 2) {
+				return;
+			}
+			config.setTableConfigs(null);
+			clearCacheLabel.setText("Cache table clear success!");
+		});
+		TitledSeparator separator = new TitledSeparator();
+		separator.setText("Clear Table Cache");
+		contentPanel.add(separator);
+		contentPanel.add(clearCachePanel);
+	}
+
+
 	private void initPostfixPanel() {
 
 		JPanel mapperPostfixPanel = new JPanel();
@@ -207,22 +233,22 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel entityPackagePanel = new JPanel();
 		entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
-		JBLabel entityPackageLabel = new JBLabel("Entity Class Package:");
+		JBLabel entityPackageLabel = new JBLabel("Domain Package:");
 		entityPackageLabel.setPreferredSize(new Dimension(200, 20));
-		entityPackageField.addActionListener(e -> {
-			final PackageChooserDialog chooser = new PackageChooserDialog("Select Entity Package", project);
-			chooser.selectPackage(entityPackageField.getText());
+		domainPackageField.addActionListener(e -> {
+			final PackageChooserDialog chooser = new PackageChooserDialog("Select Domain Package", project);
+			chooser.selectPackage(domainPackageField.getText());
 			chooser.show();
 			final PsiPackage psiPackage = chooser.getSelectedPackage();
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
-			entityPackageField.setText(packageName);
+			domainPackageField.setText(packageName);
 		});
 		entityPackagePanel.add(entityPackageLabel);
-		entityPackagePanel.add(entityPackageField);
+		entityPackagePanel.add(domainPackageField);
 
 		JPanel mapperPackagePanel = new JPanel();
 		mapperPackagePanel.setLayout(new BoxLayout(mapperPackagePanel, BoxLayout.X_AXIS));
-		JLabel mapperPackageLabel = new JLabel("Mapper Class Package:");
+		JLabel mapperPackageLabel = new JLabel("Mapper Package:");
 		mapperPackageLabel.setPreferredSize(new Dimension(200, 20));
 		mapperPackageField.addActionListener(e -> {
 			final PackageChooserDialog chooser = new PackageChooserDialog("Select Mapper Package", project);
@@ -237,7 +263,7 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel examplePackagePanel = new JPanel();
 		examplePackagePanel.setLayout(new BoxLayout(examplePackagePanel, BoxLayout.X_AXIS));
-		JLabel examplePackageLabel = new JLabel("Example Class Package:");
+		JLabel examplePackageLabel = new JLabel("Example Package:");
 		examplePackageLabel.setPreferredSize(new Dimension(200, 20));
 		examplePackageField.addActionListener(e -> {
 			final PackageChooserDialog chooser = new PackageChooserDialog("Select Example Package", project);
@@ -252,7 +278,7 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel xmlPackagePanel = new JPanel();
 		xmlPackagePanel.setLayout(new BoxLayout(xmlPackagePanel, BoxLayout.X_AXIS));
-		JLabel xmlPackageLabel = new JLabel("Mapper Xml Package:");
+		JLabel xmlPackageLabel = new JLabel("Xml Package:");
 		xmlPackageLabel.setPreferredSize(new Dimension(200, 20));
 		xmlPackageField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
 			@Override
@@ -303,7 +329,7 @@ public class GeneratorSettingUI extends JDialog {
 		globalConfig.setModuleRootPath(moduleRootField.getText());
 		globalConfig.setMapperPostfix(mapperPostfixField.getText());
 		globalConfig.setExamplePostfix(examplePostfixField.getText());
-		globalConfig.setEntityPackage(entityPackageField.getText());
+		globalConfig.setDomainPackage(domainPackageField.getText());
 		globalConfig.setMapperPackage(mapperPackageField.getText());
 		globalConfig.setExamplePackage(examplePackageField.getText());
 		globalConfig.setXmlPackage(xmlPackageField.getText());

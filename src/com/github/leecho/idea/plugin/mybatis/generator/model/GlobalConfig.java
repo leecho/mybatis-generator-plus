@@ -8,7 +8,7 @@ public class GlobalConfig {
 	private String mapperPostfix;
 	private String examplePostfix;
 
-	private String entityPackage;
+	private String domainPackage;
 	private String mapperPackage;
 	private String examplePackage;
 	private String xmlPackage;
@@ -112,12 +112,12 @@ public class GlobalConfig {
 		this.mapperPostfix = mapperPostfix;
 	}
 
-	public String getEntityPackage() {
-		return entityPackage;
+	public String getDomainPackage() {
+		return domainPackage;
 	}
 
-	public void setEntityPackage(String entityPackage) {
-		this.entityPackage = entityPackage;
+	public void setDomainPackage(String domainPackage) {
+		this.domainPackage = domainPackage;
 	}
 
 	public String getMapperPackage() {

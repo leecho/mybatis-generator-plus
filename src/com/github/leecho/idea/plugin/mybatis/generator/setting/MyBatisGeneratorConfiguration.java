@@ -1,6 +1,6 @@
 package com.github.leecho.idea.plugin.mybatis.generator.setting;
 
-import com.github.leecho.idea.plugin.mybatis.generator.model.EntityConfig;
+import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
@@ -22,7 +22,7 @@ public class MyBatisGeneratorConfiguration implements PersistentStateComponent<M
 
 	private GlobalConfig globalConfig;
 	private Map<String, Credential> credentials;
-	private Map<String, EntityConfig> entityConfigs;
+	private Map<String, TableConfig> tableConfigs;
 
 	@Nullable
 	public static MyBatisGeneratorConfiguration getInstance(Project project) {
@@ -48,12 +48,12 @@ public class MyBatisGeneratorConfiguration implements PersistentStateComponent<M
 		this.credentials = credentials;
 	}
 
-	public Map<String, EntityConfig> getEntityConfigs() {
-		return entityConfigs;
+	public Map<String, TableConfig> getTableConfigs() {
+		return tableConfigs;
 	}
 
-	public void setEntityConfigs(Map<String, EntityConfig> entityConfigs) {
-		this.entityConfigs = entityConfigs;
+	public void setTableConfigs(Map<String, TableConfig> tableConfigs) {
+		this.tableConfigs = tableConfigs;
 	}
 
 	public GlobalConfig getGlobalConfig() {

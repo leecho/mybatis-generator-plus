@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * 界面配置
  */
-public class EntityConfig {
+public class TableConfig {
 
 	/**
 	 * 配置名称
@@ -26,7 +26,7 @@ public class EntityConfig {
 	/**
 	 * 实体名
 	 */
-	private String entityName;
+	private String domainName;
 
 	/**
 	 * dao名称
@@ -57,7 +57,7 @@ public class EntityConfig {
 	private String resourcePath;
 
 	private String basePackage;
-	private String entityPackage;
+	private String domainPackage;
 
 	private String mapperPackage;
 
@@ -182,12 +182,12 @@ public class EntityConfig {
 		this.tableName = tableName;
 	}
 
-	public String getEntityName() {
-		return entityName;
+	public String getDomainName() {
+		return domainName;
 	}
 
-	public void setEntityName(String entityName) {
-		this.entityName = entityName;
+	public void setDomainName(String domainName) {
+		this.domainName = domainName;
 	}
 
 	public String getConnectorJarPath() {
@@ -206,12 +206,12 @@ public class EntityConfig {
 		this.moduleRootPath = moduleRootPath;
 	}
 
-	public String getEntityPackage() {
-		return entityPackage;
+	public String getDomainPackage() {
+		return domainPackage;
 	}
 
-	public void setEntityPackage(String entityPackage) {
-		this.entityPackage = entityPackage;
+	public void setDomainPackage(String domainPackage) {
+		this.domainPackage = domainPackage;
 	}
 
 

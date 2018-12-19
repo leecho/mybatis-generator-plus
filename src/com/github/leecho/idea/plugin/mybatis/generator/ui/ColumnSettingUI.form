@@ -20,7 +20,7 @@
           <font/>
         </border>
         <children>
-          <component id="5cf20" class="javax.swing.JTable" binding="typeMapperTable">
+          <component id="5cf20" class="javax.swing.JTable" binding="columnSettingTable">
             <constraints/>
             <properties>
               <enabled value="true"/>

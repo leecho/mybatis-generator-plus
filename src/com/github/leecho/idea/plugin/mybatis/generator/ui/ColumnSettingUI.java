@@ -1,6 +1,6 @@
 package com.github.leecho.idea.plugin.mybatis.generator.ui;
 
-import com.github.leecho.idea.plugin.mybatis.generator.model.EntityConfig;
+import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.TableInfo;
 import com.github.leecho.idea.plugin.mybatis.generator.model.ColumnSetting;
 import com.github.leecho.idea.plugin.mybatis.generator.model.ColumnSettingModel;
@@ -32,23 +32,23 @@ public class ColumnSettingUI extends DialogWrapper {
 	/**
 	 * 类型映射表
 	 */
-	private JTable typeMapperTable;
+	private JTable columnSettingTable;
 
 	/**
 	 * 类型映射表模型
 	 */
 	private ColumnSettingModel columnSettingModel;
 
-	private EntityConfig entityConfig;
+	private TableConfig tableConfig;
 
-	public ColumnSettingUI(Project project, EntityConfig entityConfig, TableInfo tableInfo) {
+	public ColumnSettingUI(Project project, TableConfig tableConfig, TableInfo tableInfo) {
 		super(project);
 		//添加类型
 		// 初始化操作
-		this.entityConfig = entityConfig;
-		load(entityConfig, tableInfo);
-		typeMapperTable.getColumnModel().setColumnMargin(3);
-		typeMapperTable.getColumnModel().getColumn(4).setCellEditor(new JXTable.BooleanEditor());
+		this.tableConfig = tableConfig;
+		load(tableConfig, tableInfo);
+		columnSettingTable.getColumnModel().setColumnMargin(3);
+		columnSettingTable.getColumnModel().getColumn(4).setCellEditor(new JXTable.BooleanEditor());
 		this.setTitle("Column Setting");
 		this.init();
 	}
@@ -65,7 +65,7 @@ public class ColumnSettingUI extends DialogWrapper {
 		columnSettingList.forEach(columnSetting -> {
 			if (columnSetting.getChanged()) {
 				columnSetting.setChanged(false);
-				entityConfig.getColumnSettings().put(columnSetting.getColumn(), columnSetting);
+				tableConfig.getColumnSettings().put(columnSetting.getColumn(), columnSetting);
 			}
 		});
 		super.doOKAction();
@@ -74,13 +74,13 @@ public class ColumnSettingUI extends DialogWrapper {
 	/**
 	 * 初始化方法
 	 */
-	protected void load(EntityConfig entityConfig, TableInfo tableInfo) {
+	protected void load(TableConfig tableConfig, TableInfo tableInfo) {
 		//初始化表格
 		this.columnSettingModel = new ColumnSettingModel();
 		JavaTypeResolverDefaultImpl resolver = new JavaTypeResolverDefaultImpl();
 		java.util.List<ColumnSetting> columnSettingList = new ArrayList<>();
 		tableInfo.getColumns().forEach(dasColumn -> {
-			ColumnSetting columnSetting = entityConfig.getColumnSettings().get(dasColumn.getName());
+			ColumnSetting columnSetting = tableConfig.getColumnSettings().get(dasColumn.getName());
 			if (columnSetting == null) {
 				columnSetting = new ColumnSetting();
 				columnSetting.setColumn(dasColumn.getName());
@@ -106,7 +106,7 @@ public class ColumnSettingUI extends DialogWrapper {
 			columnSettingList.add(columnSetting);
 		});
 		columnSettingModel.init(columnSettingList);
-		this.typeMapperTable.setModel(columnSettingModel);
+		this.columnSettingTable.setModel(columnSettingModel);
 	}
 
 }

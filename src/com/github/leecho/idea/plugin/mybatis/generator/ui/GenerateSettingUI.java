@@ -3,7 +3,7 @@ package com.github.leecho.idea.plugin.mybatis.generator.ui;
 import com.github.leecho.idea.plugin.mybatis.generator.contants.PluginContants;
 import com.github.leecho.idea.plugin.mybatis.generator.generate.MyBatisGenerateCommand;
 import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
-import com.github.leecho.idea.plugin.mybatis.generator.model.EntityConfig;
+import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.GlobalConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.TableInfo;
 import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration;
@@ -48,20 +48,21 @@ public class GenerateSettingUI extends DialogWrapper {
 	private Project project;
 	private MyBatisGeneratorConfiguration myBatisGeneratorConfiguration;
 	private PsiElement[] psiElements;
-	private EntityConfig entityConfig;
+	private TableConfig tableConfig;
 
 	private JPanel contentPane = new JBPanel<>();
 
 	private JTextField tableNameField = new JBTextField(20);
-	private JButton columnButton = new JButton("Column Setting");
+
+	private JButton columnSettingButton = new JButton("Column Setting");
 	private TextFieldWithBrowseButton moduleRootField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton basePackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton entityPackageField = new TextFieldWithBrowseButton();
+	private TextFieldWithBrowseButton domainPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton mapperPackageField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton examplePackageField = new TextFieldWithBrowseButton();
 	private JTextField xmlPackageField = new JTextField();
 	private JTextField mapperNameField = new JBTextField(20);
-	private JTextField entityNameField = new JBTextField(20);
+	private JTextField domainNameField = new JBTextField(20);
 	private JTextField exampleNameField = new JBTextField(20);
 	private JTextField primaryKeyField = new JBTextField(20);
 
@@ -98,7 +99,7 @@ public class GenerateSettingUI extends DialogWrapper {
 		this.psiElements = anActionEvent.getData(LangDataKeys.PSI_ELEMENT_ARRAY);
 
 		GlobalConfig globalConfig = myBatisGeneratorConfiguration.getGlobalConfig();
-		Map<String, EntityConfig> historyConfigList = myBatisGeneratorConfiguration.getEntityConfigs();
+		Map<String, TableConfig> historyConfigList = myBatisGeneratorConfiguration.getTableConfigs();
 
 		setModal(true);
 		setTitle("Generate Setting");
@@ -117,44 +118,45 @@ public class GenerateSettingUI extends DialogWrapper {
 
 		//单表时，优先使用已经存在的配置
 		if (historyConfigList != null) {
-			entityConfig = historyConfigList.get(tableName);
+			tableConfig = historyConfigList.get(tableName);
 		}
-		if (entityConfig == null) {
+		if (tableConfig == null) {
 			//初始化配置
-			entityConfig = new EntityConfig();
-			entityConfig.setModuleRootPath(globalConfig.getModuleRootPath());
-			entityConfig.setSourcePath(globalConfig.getSourcePath());
-			entityConfig.setResourcePath(globalConfig.getResourcePath());
-			entityConfig.setEntityPackage(globalConfig.getEntityPackage());
-			entityConfig.setMapperPackage(globalConfig.getMapperPackage());
-			entityConfig.setMapperPostfix(globalConfig.getMapperPostfix());
-			entityConfig.setExamplePostfix(globalConfig.getExamplePostfix());
-			entityConfig.setExamplePackage(globalConfig.getExamplePackage());
-			entityConfig.setXmlPackage(globalConfig.getXmlPackage());
+			tableConfig = new TableConfig();
+			tableConfig.setModuleRootPath(globalConfig.getModuleRootPath());
+			tableConfig.setSourcePath(globalConfig.getSourcePath());
+			tableConfig.setResourcePath(globalConfig.getResourcePath());
+			tableConfig.setDomainPackage(globalConfig.getDomainPackage());
+			tableConfig.setMapperPackage(globalConfig.getMapperPackage());
+			tableConfig.setMapperPostfix(globalConfig.getMapperPostfix());
+			tableConfig.setExamplePostfix(globalConfig.getExamplePostfix());
+			tableConfig.setExamplePackage(globalConfig.getExamplePackage());
+			tableConfig.setXmlPackage(globalConfig.getXmlPackage());
 
-			entityConfig.setOffsetLimit(globalConfig.isOffsetLimit());
-			entityConfig.setComment(globalConfig.isComment());
-			entityConfig.setOverride(globalConfig.isOverride());
-			entityConfig.setNeedToStringHashcodeEquals(globalConfig.isNeedToStringHashcodeEquals());
-			entityConfig.setUseSchemaPrefix(globalConfig.isUseSchemaPrefix());
-			entityConfig.setNeedForUpdate(globalConfig.isNeedForUpdate());
-			entityConfig.setAnnotationDAO(globalConfig.isAnnotationDAO());
-			entityConfig.setUseDAOExtendStyle(globalConfig.isUseDAOExtendStyle());
-			entityConfig.setJsr310Support(globalConfig.isJsr310Support());
-			entityConfig.setAnnotation(globalConfig.isAnnotation());
-			entityConfig.setUseActualColumnNames(globalConfig.isUseActualColumnNames());
-			entityConfig.setUseTableNameAlias(globalConfig.isUseTableNameAlias());
-			entityConfig.setUseExample(globalConfig.isUseExample());
-			entityConfig.setMysql8(globalConfig.isMysql8());
-			entityConfig.setLombokAnnotation(globalConfig.isLombokAnnotation());
-			entityConfig.setLombokBuilderAnnotation(globalConfig.isLombokBuilderAnnotation());
+			tableConfig.setOffsetLimit(globalConfig.isOffsetLimit());
+			tableConfig.setComment(globalConfig.isComment());
+			tableConfig.setOverride(globalConfig.isOverride());
+			tableConfig.setNeedToStringHashcodeEquals(globalConfig.isNeedToStringHashcodeEquals());
+			tableConfig.setUseSchemaPrefix(globalConfig.isUseSchemaPrefix());
+			tableConfig.setNeedForUpdate(globalConfig.isNeedForUpdate());
+			tableConfig.setAnnotationDAO(globalConfig.isAnnotationDAO());
+			tableConfig.setUseDAOExtendStyle(globalConfig.isUseDAOExtendStyle());
+			tableConfig.setJsr310Support(globalConfig.isJsr310Support());
+			tableConfig.setAnnotation(globalConfig.isAnnotation());
+			tableConfig.setUseActualColumnNames(globalConfig.isUseActualColumnNames());
+			tableConfig.setUseTableNameAlias(globalConfig.isUseTableNameAlias());
+			tableConfig.setUseExample(globalConfig.isUseExample());
+			tableConfig.setMysql8(globalConfig.isMysql8());
+			tableConfig.setLombokAnnotation(globalConfig.isLombokAnnotation());
+			tableConfig.setLombokBuilderAnnotation(globalConfig.isLombokBuilderAnnotation());
+			tableConfig.setPrimaryKey(primaryKey);
 		}
 
 		contentPane.setPreferredSize(new Dimension(700, 500));
 		contentPane.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
 
 		//initDatabasePanel();
-		this.initEntityPanel(tableName, entityName, primaryKey);
+		this.initDomainPanel(tableName, entityName, primaryKey);
 		//Model
 		this.initPackagePanel();
 		this.initOptionsPanel();
@@ -171,16 +173,16 @@ public class GenerateSettingUI extends DialogWrapper {
 			errors.add("Module root must not be null");
 		}
 
-		if (StringUtils.isEmpty(entityNameField.getText())) {
-			errors.add("Entity name must not be null");
+		if (StringUtils.isEmpty(domainNameField.getText())) {
+			errors.add("Domain name must not be null");
 		}
 
 		if (StringUtils.isEmpty(mapperNameField.getText())) {
 			errors.add("Mapper name must not be null");
 		}
 
-		if (StringUtils.isEmpty(entityPackageField.getText())) {
-			errors.add("Entity package must not be null");
+		if (StringUtils.isEmpty(domainPackageField.getText())) {
+			errors.add("Domain package must not be null");
 		}
 
 		if (StringUtils.isEmpty(mapperPackageField.getText())) {
@@ -191,11 +193,11 @@ public class GenerateSettingUI extends DialogWrapper {
 			errors.add("Mapper xml package must not be null");
 		}
 
-		if(useExampleBox.getSelectedObjects() != null){
-			if(StringUtils.isEmpty(exampleNameField.getText())){
+		if (useExampleBox.getSelectedObjects() != null) {
+			if (StringUtils.isEmpty(exampleNameField.getText())) {
 				errors.add("Example name must not be null");
 			}
-			if(StringUtils.isEmpty(examplePackageField.getText())){
+			if (StringUtils.isEmpty(examplePackageField.getText())) {
 				errors.add("Example package must not be null");
 			}
 		}
@@ -235,7 +237,7 @@ public class GenerateSettingUI extends DialogWrapper {
 			if (confirm == 2) {
 				return;
 			}
-		}else{
+		} else {
 			int confirm = Messages.showOkCancelDialog(project, "Confirm start generate?", "Mybatis Generator Plus", Messages.getQuestionIcon());
 			if (confirm == 2) {
 				return;
@@ -313,22 +315,22 @@ public class GenerateSettingUI extends DialogWrapper {
 			examplePackagePanel.setVisible(useExampleBox.getSelectedObjects() != null);
 		});
 
-		offsetLimitBox.setSelected(entityConfig.isOffsetLimit());
-		commentBox.setSelected(entityConfig.isComment());
-		overrideBox.setSelected(entityConfig.isOverride());
-		needToStringHashcodeEqualsBox.setSelected(entityConfig.isNeedToStringHashcodeEquals());
-		useSchemaPrefixBox.setSelected(entityConfig.isUseSchemaPrefix());
-		needForUpdateBox.setSelected(entityConfig.isNeedForUpdate());
-		annotationDAOBox.setSelected(entityConfig.isAnnotationDAO());
-		useDAOExtendStyleBox.setSelected(entityConfig.isUseDAOExtendStyle());
-		jsr310SupportBox.setSelected(entityConfig.isJsr310Support());
-		annotationBox.setSelected(entityConfig.isAnnotation());
-		useActualColumnNamesBox.setSelected(entityConfig.isUseActualColumnNames());
-		useTableNameAliasBox.setSelected(entityConfig.isUseTableNameAlias());
-		useExampleBox.setSelected(entityConfig.isUseExample());
-		mysql8Box.setSelected(entityConfig.isMysql8());
-		lombokAnnotationBox.setSelected(entityConfig.isLombokAnnotation());
-		lombokBuilderAnnotationBox.setSelected(entityConfig.isLombokBuilderAnnotation());
+		offsetLimitBox.setSelected(tableConfig.isOffsetLimit());
+		commentBox.setSelected(tableConfig.isComment());
+		overrideBox.setSelected(tableConfig.isOverride());
+		needToStringHashcodeEqualsBox.setSelected(tableConfig.isNeedToStringHashcodeEquals());
+		useSchemaPrefixBox.setSelected(tableConfig.isUseSchemaPrefix());
+		needForUpdateBox.setSelected(tableConfig.isNeedForUpdate());
+		annotationDAOBox.setSelected(tableConfig.isAnnotationDAO());
+		useDAOExtendStyleBox.setSelected(tableConfig.isUseDAOExtendStyle());
+		jsr310SupportBox.setSelected(tableConfig.isJsr310Support());
+		annotationBox.setSelected(tableConfig.isAnnotation());
+		useActualColumnNamesBox.setSelected(tableConfig.isUseActualColumnNames());
+		useTableNameAliasBox.setSelected(tableConfig.isUseTableNameAlias());
+		useExampleBox.setSelected(tableConfig.isUseExample());
+		mysql8Box.setSelected(tableConfig.isMysql8());
+		lombokAnnotationBox.setSelected(tableConfig.isLombokAnnotation());
+		lombokBuilderAnnotationBox.setSelected(tableConfig.isLombokBuilderAnnotation());
 		contentPane.add(optionsPanel);
 	}
 
@@ -348,8 +350,8 @@ public class GenerateSettingUI extends DialogWrapper {
 				moduleRootField.setText(moduleRootField.getText().replaceAll("\\\\", "/"));
 			}
 		});
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getModuleRootPath())) {
-			moduleRootField.setText(entityConfig.getModuleRootPath());
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getModuleRootPath())) {
+			moduleRootField.setText(tableConfig.getModuleRootPath());
 		} else {
 			moduleRootField.setText(project.getBasePath());
 		}
@@ -368,12 +370,12 @@ public class GenerateSettingUI extends DialogWrapper {
 			final PsiPackage psiPackage = chooser.getSelectedPackage();
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
 			basePackageField.setText(packageName);
-			entityPackageField.setText(packageName + ".domain");
+			domainPackageField.setText(packageName + ".domain");
 			mapperPackageField.setText(packageName + "." + getMapperPostfix().toLowerCase());
 			examplePackageField.setText(packageName + "." + getExamplePostfix().toLowerCase());
 		});
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getBasePackage())) {
-			basePackageField.setText(entityConfig.getBasePackage());
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getBasePackage())) {
+			basePackageField.setText(tableConfig.getBasePackage());
 		} else {
 			basePackageField.setText("");
 		}
@@ -382,23 +384,23 @@ public class GenerateSettingUI extends DialogWrapper {
 
 		JPanel entityPackagePanel = new JPanel();
 		entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
-		JBLabel entityPackageLabel = new JBLabel("Entity Package:");
+		JBLabel entityPackageLabel = new JBLabel("Domain Package:");
 		entityPackageLabel.setPreferredSize(new Dimension(150, 20));
-		entityPackageField.addActionListener(e -> {
+		domainPackageField.addActionListener(e -> {
 			final PackageChooserDialog chooser = new PackageChooserDialog("Select Entity Package", project);
-			chooser.selectPackage(entityPackageField.getText());
+			chooser.selectPackage(domainPackageField.getText());
 			chooser.show();
 			final PsiPackage psiPackage = chooser.getSelectedPackage();
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
-			entityPackageField.setText(packageName);
+			domainPackageField.setText(packageName);
 		});
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getEntityPackage())) {
-			entityPackageField.setText(entityConfig.getEntityPackage());
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getDomainPackage())) {
+			domainPackageField.setText(tableConfig.getDomainPackage());
 		} else {
-			entityPackageField.setText("");
+			domainPackageField.setText("");
 		}
 		entityPackagePanel.add(entityPackageLabel);
-		entityPackagePanel.add(entityPackageField);
+		entityPackagePanel.add(domainPackageField);
 
 		JPanel mapperPackagePanel = new JPanel();
 		mapperPackagePanel.setLayout(new BoxLayout(mapperPackagePanel, BoxLayout.X_AXIS));
@@ -413,8 +415,8 @@ public class GenerateSettingUI extends DialogWrapper {
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
 			mapperPackageField.setText(packageName);
 		});
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getMapperPackage())) {
-			mapperPackageField.setText(entityConfig.getMapperPackage());
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getMapperPackage())) {
+			mapperPackageField.setText(tableConfig.getMapperPackage());
 		} else {
 			mapperPackageField.setText("");
 		}
@@ -435,16 +437,16 @@ public class GenerateSettingUI extends DialogWrapper {
 
 		JLabel examplePackageLabel = new JLabel("Example Package:");
 		examplePackageLabel.setPreferredSize(new Dimension(150, 20));
-		examplePackageField.setText(entityConfig.getExamplePackage());
+		examplePackageField.setText(tableConfig.getExamplePackage());
 		examplePackagePanel.add(examplePackageLabel);
 		examplePackagePanel.add(examplePackageField);
-		examplePackagePanel.setVisible(entityConfig.isUseExample());
+		examplePackagePanel.setVisible(tableConfig.isUseExample());
 
 		JPanel xmlPackagePanel = new JPanel();
 		xmlPackagePanel.setLayout(new BoxLayout(xmlPackagePanel, BoxLayout.X_AXIS));
 		JLabel xmlPackageLabel = new JLabel("Xml Package:");
 		xmlPackageLabel.setPreferredSize(new Dimension(150, 20));
-		xmlPackageField.setText(entityConfig.getXmlPackage());
+		xmlPackageField.setText(tableConfig.getXmlPackage());
 		xmlPackagePanel.add(xmlPackageLabel);
 		xmlPackagePanel.add(xmlPackageField);
 
@@ -463,11 +465,11 @@ public class GenerateSettingUI extends DialogWrapper {
 		contentPane.add(packagePanel);
 	}
 
-	private void initEntityPanel(String tableName, String modelName, String primaryKey) {
+	private void initDomainPanel(String tableName, String modelName, String primaryKey) {
 		JPanel entityPanel = new JPanel();
 		entityPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
 		TitledSeparator separator = new TitledSeparator();
-		separator.setText("Entity");
+		separator.setText("Domain");
 		contentPane.add(separator);
 		contentPane.add(entityPanel);
 
@@ -479,12 +481,12 @@ public class GenerateSettingUI extends DialogWrapper {
 		tableLabel.setPreferredSize(new Dimension(150, 20));
 		tableNamePanel.add(tableLabel);
 		tableNamePanel.add(tableNameField);
-		tableNamePanel.add(columnButton);
+		tableNamePanel.add(columnSettingButton);
 
 		PsiElement psiElement = psiElements[0];
 		TableInfo tableInfo = new TableInfo((DbTable) psiElement);
-		columnButton.addActionListener(e -> {
-			ColumnSettingUI columnSettingUI = new ColumnSettingUI(anActionEvent.getProject(), entityConfig,tableInfo);
+		columnSettingButton.addActionListener(e -> {
+			ColumnSettingUI columnSettingUI = new ColumnSettingUI(anActionEvent.getProject(), tableConfig, tableInfo);
 			columnSettingUI.showAndGet();
 		});
 		if (psiElements.length > 1) {
@@ -497,29 +499,40 @@ public class GenerateSettingUI extends DialogWrapper {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				String entityName = StringUtils.dbStringToCamelStyle(tableNameField.getText());
-				entityNameField.setText(entityName);
+				domainNameField.setText(entityName);
 				mapperNameField.setText(getMapperName(entityName));
 				exampleNameField.setText(getExampleName(entityName));
 			}
 		});
 
-		JPanel entityNamePanel = new JPanel();
-		entityNamePanel.setLayout(new BoxLayout(entityNamePanel, BoxLayout.X_AXIS));
-		JLabel entityNameLabel = new JLabel("Entity Name:");
+		JPanel primaryPanel = new JPanel();
+		primaryPanel.setLayout(new BoxLayout(primaryPanel, BoxLayout.X_AXIS));
+		JLabel primaryKeyLabel = new JLabel("Primary Key:");
+		primaryKeyLabel.setLabelFor(primaryKeyField);
+		primaryKeyLabel.setPreferredSize(new Dimension(150, 20));
+		primaryPanel.add(primaryKeyLabel);
+		primaryPanel.add(primaryKeyField);
+
+		primaryKeyField.setText(primaryKey);
+		primaryKeyField.setEditable(false);
+
+		JPanel domainNamePanel = new JPanel();
+		domainNamePanel.setLayout(new BoxLayout(domainNamePanel, BoxLayout.X_AXIS));
+		JLabel entityNameLabel = new JLabel("Domain Name:");
 		entityNameLabel.setPreferredSize(new Dimension(150, 20));
-		entityNamePanel.add(entityNameLabel);
-		entityNamePanel.add(entityNameField);
-		entityPanel.add(entityNamePanel);
+		domainNamePanel.add(entityNameLabel);
+		domainNamePanel.add(domainNameField);
+		entityPanel.add(domainNamePanel);
 		if (psiElements.length > 1) {
-			entityNameField.addFocusListener(new JTextFieldHintListener(entityNameField, "eg:DbTable"));
+			domainNameField.addFocusListener(new JTextFieldHintListener(domainNameField, "eg:DbTable"));
 		} else {
-			entityNameField.setText(modelName);
+			domainNameField.setText(modelName);
 		}
-		entityNameField.addKeyListener(new KeyAdapter() {
+		domainNameField.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				mapperNameField.setText(getMapperName(entityNameField.getText()));
-				exampleNameField.setText(getExampleName(entityNameField.getText()));
+				mapperNameField.setText(getMapperName(domainNameField.getText()));
+				exampleNameField.setText(getExampleName(domainNameField.getText()));
 			}
 		});
 
@@ -528,12 +541,12 @@ public class GenerateSettingUI extends DialogWrapper {
 		mapperNamePanel.setLayout(new BoxLayout(mapperNamePanel, BoxLayout.X_AXIS));
 		JLabel mapperNameLabel = new JLabel("Mapper Name:");
 		mapperNameLabel.setPreferredSize(new Dimension(150, 20));
-		mapperNameLabel.setLabelFor(entityNameField);
+		mapperNameLabel.setLabelFor(domainNameField);
 		mapperNamePanel.add(mapperNameLabel);
 		mapperNamePanel.add(mapperNameField);
 		if (psiElements.length > 1) {
-			if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getMapperPostfix())) {
-				mapperNameField.addFocusListener(new JTextFieldHintListener(mapperNameField, "eg:DbTable" + entityConfig.getMapperPostfix()));
+			if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getMapperPostfix())) {
+				mapperNameField.addFocusListener(new JTextFieldHintListener(mapperNameField, "eg:DbTable" + tableConfig.getMapperPostfix()));
 			} else {
 				mapperNameField.addFocusListener(new JTextFieldHintListener(mapperNameField, "eg:DbTable" + "Mapper"));
 			}
@@ -544,12 +557,12 @@ public class GenerateSettingUI extends DialogWrapper {
 		exampleNamePanel.setLayout(new BoxLayout(exampleNamePanel, BoxLayout.X_AXIS));
 		JLabel exampleNameLabel = new JLabel("Example Name:");
 		exampleNameLabel.setPreferredSize(new Dimension(150, 20));
-		exampleNameLabel.setLabelFor(entityNameField);
+		exampleNameLabel.setLabelFor(domainNameField);
 		exampleNamePanel.add(exampleNameLabel);
 		exampleNamePanel.add(exampleNameField);
 		if (psiElements.length > 1) {
-			if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getExamplePostfix())) {
-				exampleNameField.addFocusListener(new JTextFieldHintListener(exampleNameField, "eg:DbTable" + entityConfig.getExamplePostfix()));
+			if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getExamplePostfix())) {
+				exampleNameField.addFocusListener(new JTextFieldHintListener(exampleNameField, "eg:DbTable" + tableConfig.getExamplePostfix()));
 			} else {
 				exampleNameField.addFocusListener(new JTextFieldHintListener(exampleNameField, "eg:DbTable" + "Example"));
 			}
@@ -557,81 +570,82 @@ public class GenerateSettingUI extends DialogWrapper {
 			exampleNameField.setText(getExampleName(modelName));
 		}
 
-		exampleNamePanel.setVisible(entityConfig.isUseExample());
+		exampleNamePanel.setVisible(tableConfig.isUseExample());
 
 		entityPanel.add(tableNamePanel);
-		entityPanel.add(entityNamePanel);
+		entityPanel.add(primaryPanel);
+		entityPanel.add(domainNamePanel);
 		entityPanel.add(mapperNamePanel);
 		entityPanel.add(exampleNamePanel);
 	}
 
 	public void generate(RawConnectionConfig connectionConfig) {
-		entityConfig.setName(tableNameField.getText());
-		entityConfig.setTableName(tableNameField.getText());
-		entityConfig.setModuleRootPath(moduleRootField.getText());
+		tableConfig.setName(tableNameField.getText());
+		tableConfig.setTableName(tableNameField.getText());
+		tableConfig.setModuleRootPath(moduleRootField.getText());
 
-		entityConfig.setBasePackage(basePackageField.getText());
-		entityConfig.setEntityPackage(entityPackageField.getText());
-		entityConfig.setMapperPackage(mapperPackageField.getText());
-		entityConfig.setExamplePackage(examplePackageField.getText());
-		entityConfig.setXmlPackage(xmlPackageField.getText());
+		tableConfig.setBasePackage(basePackageField.getText());
+		tableConfig.setDomainPackage(domainPackageField.getText());
+		tableConfig.setMapperPackage(mapperPackageField.getText());
+		tableConfig.setExamplePackage(examplePackageField.getText());
+		tableConfig.setXmlPackage(xmlPackageField.getText());
 
-		entityConfig.setMapperName(mapperNameField.getText());
-		entityConfig.setEntityName(entityNameField.getText());
-		entityConfig.setPrimaryKey(primaryKeyField.getText());
-		entityConfig.setExampleName(exampleNameField.getText());
+		tableConfig.setMapperName(mapperNameField.getText());
+		tableConfig.setDomainName(domainNameField.getText());
+		tableConfig.setPrimaryKey(primaryKeyField.getText());
+		tableConfig.setExampleName(exampleNameField.getText());
 
-		entityConfig.setOffsetLimit(offsetLimitBox.getSelectedObjects() != null);
-		entityConfig.setComment(commentBox.getSelectedObjects() != null);
-		entityConfig.setOverride(overrideBox.getSelectedObjects() != null);
-		entityConfig.setNeedToStringHashcodeEquals(needToStringHashcodeEqualsBox.getSelectedObjects() != null);
-		entityConfig.setUseSchemaPrefix(useSchemaPrefixBox.getSelectedObjects() != null);
-		entityConfig.setNeedForUpdate(needForUpdateBox.getSelectedObjects() != null);
-		entityConfig.setAnnotationDAO(annotationDAOBox.getSelectedObjects() != null);
-		entityConfig.setUseDAOExtendStyle(useDAOExtendStyleBox.getSelectedObjects() != null);
-		entityConfig.setJsr310Support(jsr310SupportBox.getSelectedObjects() != null);
-		entityConfig.setAnnotation(annotationBox.getSelectedObjects() != null);
-		entityConfig.setUseActualColumnNames(useActualColumnNamesBox.getSelectedObjects() != null);
-		entityConfig.setUseTableNameAlias(useTableNameAliasBox.getSelectedObjects() != null);
-		entityConfig.setUseExample(useExampleBox.getSelectedObjects() != null);
-		entityConfig.setMysql8(mysql8Box.getSelectedObjects() != null);
-		entityConfig.setLombokAnnotation(lombokAnnotationBox.getSelectedObjects() != null);
-		entityConfig.setLombokBuilderAnnotation(lombokBuilderAnnotationBox.getSelectedObjects() != null);
+		tableConfig.setOffsetLimit(offsetLimitBox.getSelectedObjects() != null);
+		tableConfig.setComment(commentBox.getSelectedObjects() != null);
+		tableConfig.setOverride(overrideBox.getSelectedObjects() != null);
+		tableConfig.setNeedToStringHashcodeEquals(needToStringHashcodeEqualsBox.getSelectedObjects() != null);
+		tableConfig.setUseSchemaPrefix(useSchemaPrefixBox.getSelectedObjects() != null);
+		tableConfig.setNeedForUpdate(needForUpdateBox.getSelectedObjects() != null);
+		tableConfig.setAnnotationDAO(annotationDAOBox.getSelectedObjects() != null);
+		tableConfig.setUseDAOExtendStyle(useDAOExtendStyleBox.getSelectedObjects() != null);
+		tableConfig.setJsr310Support(jsr310SupportBox.getSelectedObjects() != null);
+		tableConfig.setAnnotation(annotationBox.getSelectedObjects() != null);
+		tableConfig.setUseActualColumnNames(useActualColumnNamesBox.getSelectedObjects() != null);
+		tableConfig.setUseTableNameAlias(useTableNameAliasBox.getSelectedObjects() != null);
+		tableConfig.setUseExample(useExampleBox.getSelectedObjects() != null);
+		tableConfig.setMysql8(mysql8Box.getSelectedObjects() != null);
+		tableConfig.setLombokAnnotation(lombokAnnotationBox.getSelectedObjects() != null);
+		tableConfig.setLombokBuilderAnnotation(lombokBuilderAnnotationBox.getSelectedObjects() != null);
 
-		entityConfig.setSourcePath(this.entityConfig.getSourcePath());
-		entityConfig.setResourcePath(this.entityConfig.getResourcePath());
+		tableConfig.setSourcePath(this.tableConfig.getSourcePath());
+		tableConfig.setResourcePath(this.tableConfig.getResourcePath());
 
-		new MyBatisGenerateCommand(entityConfig).execute(project, connectionConfig);
+		new MyBatisGenerateCommand(tableConfig).execute(project, connectionConfig);
 
 	}
 
 	private String getMapperName(String entityName) {
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getMapperPostfix())) {
-			return entityName + entityConfig.getMapperPostfix();
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getMapperPostfix())) {
+			return entityName + tableConfig.getMapperPostfix();
 		} else {
 			return (entityName + "Mapper");
 		}
 	}
 
 	private String getMapperPostfix() {
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getMapperPostfix())) {
-			return entityConfig.getMapperPostfix();
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getMapperPostfix())) {
+			return tableConfig.getMapperPostfix();
 		} else {
 			return "Mapper";
 		}
 	}
 
 	private String getExamplePostfix() {
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getExamplePostfix())) {
-			return entityConfig.getExamplePostfix();
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getExamplePostfix())) {
+			return tableConfig.getExamplePostfix();
 		} else {
 			return "Example";
 		}
 	}
 
 	private String getExampleName(String entityName) {
-		if (entityConfig != null && !StringUtils.isEmpty(entityConfig.getExamplePostfix())) {
-			return entityName + entityConfig.getExamplePostfix();
+		if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getExamplePostfix())) {
+			return entityName + tableConfig.getExamplePostfix();
 		} else {
 			return (entityName + "Example");
 		}
