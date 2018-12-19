@@ -10,6 +10,7 @@ import com.intellij.openapi.ui.TextBrowseFolderListener;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.PsiPackage;
+import com.intellij.ui.EditorTextFieldWithBrowseButton;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.openapi.project.Project;
@@ -28,10 +29,10 @@ public class GeneratorSettingUI extends JDialog {
 
 	private Project project;
 
-	private TextFieldWithBrowseButton domainPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton mapperPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton xmlPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton examplePackageField = new TextFieldWithBrowseButton();
+	private EditorTextFieldWithBrowseButton domainPackageField ;
+	private EditorTextFieldWithBrowseButton mapperPackageField;
+	private JTextField xmlPackageField = new JTextField();
+	private EditorTextFieldWithBrowseButton examplePackageField ;
 	private TextFieldWithBrowseButton moduleRootField = new TextFieldWithBrowseButton();
 
 	private JTextField sourcePathField = new JTextField();
@@ -235,6 +236,7 @@ public class GeneratorSettingUI extends JDialog {
 		entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
 		JBLabel entityPackageLabel = new JBLabel("Domain Package:");
 		entityPackageLabel.setPreferredSize(new Dimension(200, 20));
+		domainPackageField = new EditorTextFieldWithBrowseButton(project, false);
 		domainPackageField.addActionListener(e -> {
 			final PackageChooserDialog chooser = new PackageChooserDialog("Select Domain Package", project);
 			chooser.selectPackage(domainPackageField.getText());
@@ -250,11 +252,12 @@ public class GeneratorSettingUI extends JDialog {
 		mapperPackagePanel.setLayout(new BoxLayout(mapperPackagePanel, BoxLayout.X_AXIS));
 		JLabel mapperPackageLabel = new JLabel("Mapper Package:");
 		mapperPackageLabel.setPreferredSize(new Dimension(200, 20));
+		mapperPackageField = new EditorTextFieldWithBrowseButton(project, false);
 		mapperPackageField.addActionListener(e -> {
-			final PackageChooserDialog chooser = new PackageChooserDialog("Select Mapper Package", project);
-			chooser.selectPackage(mapperPackageField.getText());
-			chooser.show();
-			final PsiPackage psiPackage = chooser.getSelectedPackage();
+			final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Mapper Package", project);
+			packageChooserDialog.selectPackage(mapperPackageField.getText());
+			packageChooserDialog.show();
+			final PsiPackage psiPackage = packageChooserDialog.getSelectedPackage();
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
 			mapperPackageField.setText(packageName);
 		});
@@ -265,11 +268,12 @@ public class GeneratorSettingUI extends JDialog {
 		examplePackagePanel.setLayout(new BoxLayout(examplePackagePanel, BoxLayout.X_AXIS));
 		JLabel examplePackageLabel = new JLabel("Example Package:");
 		examplePackageLabel.setPreferredSize(new Dimension(200, 20));
+		examplePackageField = new EditorTextFieldWithBrowseButton(project, false);
 		examplePackageField.addActionListener(e -> {
-			final PackageChooserDialog chooser = new PackageChooserDialog("Select Example Package", project);
-			chooser.selectPackage(examplePackageField.getText());
-			chooser.show();
-			final PsiPackage psiPackage = chooser.getSelectedPackage();
+			final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Example Package", project);
+			packageChooserDialog.selectPackage(examplePackageField.getText());
+			packageChooserDialog.show();
+			final PsiPackage psiPackage = packageChooserDialog.getSelectedPackage();
 			String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
 			examplePackageField.setText(packageName);
 		});
@@ -280,20 +284,12 @@ public class GeneratorSettingUI extends JDialog {
 		xmlPackagePanel.setLayout(new BoxLayout(xmlPackagePanel, BoxLayout.X_AXIS));
 		JLabel xmlPackageLabel = new JLabel("Xml Package:");
 		xmlPackageLabel.setPreferredSize(new Dimension(200, 20));
-		xmlPackageField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				super.actionPerformed(e);
-				xmlPackageField.setText(xmlPackageField.getText().replaceAll("\\\\", "/"));
-			}
-		});
 		xmlPackageField.setText(globalConfig.getXmlPackage());
 		xmlPackagePanel.add(xmlPackageLabel);
 		xmlPackagePanel.add(xmlPackageField);
 
 		JPanel packagePanel = new JPanel();
 		packagePanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
-		//packagePanel.setBorder(BorderFactory.createTitledBorder("Package"));
 		packagePanel.add(projectRootPanel);
 		packagePanel.add(entityPackagePanel);
 		packagePanel.add(mapperPackagePanel);

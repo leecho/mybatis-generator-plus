@@ -3,8 +3,8 @@ package com.github.leecho.idea.plugin.mybatis.generator.ui;
 import com.github.leecho.idea.plugin.mybatis.generator.contants.PluginContants;
 import com.github.leecho.idea.plugin.mybatis.generator.generate.MyBatisGenerateCommand;
 import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
-import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.GlobalConfig;
+import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.TableInfo;
 import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration;
 import com.github.leecho.idea.plugin.mybatis.generator.util.DatabaseUtils;
@@ -24,6 +24,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPackage;
+import com.intellij.ui.EditorTextFieldWithBrowseButton;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
@@ -32,7 +33,9 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,9 +60,9 @@ public class GenerateSettingUI extends DialogWrapper {
 	private JButton columnSettingButton = new JButton("Column Setting");
 	private TextFieldWithBrowseButton moduleRootField = new TextFieldWithBrowseButton();
 	private TextFieldWithBrowseButton basePackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton domainPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton mapperPackageField = new TextFieldWithBrowseButton();
-	private TextFieldWithBrowseButton examplePackageField = new TextFieldWithBrowseButton();
+	private EditorTextFieldWithBrowseButton domainPackageField;
+	private EditorTextFieldWithBrowseButton mapperPackageField;
+	private EditorTextFieldWithBrowseButton examplePackageField;
 	private JTextField xmlPackageField = new JTextField();
 	private JTextField mapperNameField = new JBTextField(20);
 	private JTextField domainNameField = new JBTextField(20);
@@ -382,6 +385,9 @@ public class GenerateSettingUI extends DialogWrapper {
 		basePackagePanel.add(basePackageLabel);
 		basePackagePanel.add(basePackageField);
 
+		this.domainPackageField = new EditorTextFieldWithBrowseButton(project, false);
+
+
 		JPanel entityPackagePanel = new JPanel();
 		entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
 		JBLabel entityPackageLabel = new JBLabel("Domain Package:");
@@ -406,6 +412,7 @@ public class GenerateSettingUI extends DialogWrapper {
 		mapperPackagePanel.setLayout(new BoxLayout(mapperPackagePanel, BoxLayout.X_AXIS));
 		JLabel mapperPackageLabel = new JLabel("Mapper Package:");
 		mapperPackageLabel.setPreferredSize(new Dimension(150, 20));
+		mapperPackageField = new EditorTextFieldWithBrowseButton(project, false);
 		mapperPackageField.addActionListener(event -> {
 			final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Mapper Package", project);
 			packageChooserDialog.selectPackage(mapperPackageField.getText());
@@ -425,6 +432,7 @@ public class GenerateSettingUI extends DialogWrapper {
 
 		examplePackagePanel.setLayout(new BoxLayout(examplePackagePanel, BoxLayout.X_AXIS));
 
+		examplePackageField = new EditorTextFieldWithBrowseButton(project, false);
 		examplePackageField.addActionListener(e -> {
 			final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Example Package", project);
 			packageChooserDialog.selectPackage(examplePackageField.getText());
