@@ -44,7 +44,7 @@ public class DatabaseCredentialUI extends DialogWrapper {
 		this.url = url;
 		this.project = project;
 		this.myBatisGeneratorConfiguration = MyBatisGeneratorConfiguration.getInstance(project);
-		setTitle("Connect Database");
+		setTitle("Connect to Database");
 		pack();
 
 		contentPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
