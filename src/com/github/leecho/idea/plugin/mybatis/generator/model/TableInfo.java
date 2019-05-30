@@ -1,6 +1,5 @@
 package com.github.leecho.idea.plugin.mybatis.generator.model;
 
-import com.google.common.collect.Lists;
 import com.intellij.database.model.DasColumn;
 import com.intellij.database.psi.DbTable;
 import com.intellij.database.util.DasUtil;
@@ -12,7 +11,7 @@ public class TableInfo {
 
     public final DbTable tableElement;
 
-    private List<DasColumn> columns = new ArrayList<DasColumn>();
+    private List<DasColumn> columns;
 
     private List<String> primaryKeys = new ArrayList<String>();
 
@@ -44,7 +43,7 @@ public class TableInfo {
     }
 
     public List<String> getColumnsName() {
-        List<String> columnsName = Lists.newArrayList();
+        List<String> columnsName = new ArrayList<>();
         for (DasColumn column : columns) {
             columnsName.add(column.getName());
         }

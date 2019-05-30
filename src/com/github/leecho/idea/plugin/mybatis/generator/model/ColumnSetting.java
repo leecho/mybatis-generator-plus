@@ -25,6 +25,8 @@ public class ColumnSetting {
 
     private Boolean changed;
 
+    private String comment;
+
     public ColumnSetting(){
 
     }
@@ -75,5 +77,13 @@ public class ColumnSetting {
 
 	public void setIgnore(Boolean ignore) {
 		this.ignore = ignore;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 }

@@ -151,7 +151,7 @@ public class MyBatisGenerateCommand {
 						result.addAll(myBatisCodeGenerator.getGeneratedXmlFiles().stream()
 								.map(generatedXmlFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project).replace(project.getBasePath() + "/", ""), MyBatisGenerateCommand.this.tableConfig.getResourcePath(), generatedXmlFile.getTargetPackage().replace(".", "/"), generatedXmlFile.getFileName(), generatedXmlFile.getFileName()))
 								.collect(Collectors.toList()));
-						Notification notification = balloonNotifications.createNotification("Generate Finished", "<html>" + String.join("<br/>", result) + "</html>", NotificationType.INFORMATION, (notification1, hyperlinkEvent) -> {
+						Notification notification = balloonNotifications.createNotification("Generate Successfully", "<html>" + String.join("<br/>", result) + "</html>", NotificationType.INFORMATION, (notification1, hyperlinkEvent) -> {
 							if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 								new OpenFileDescriptor(project, Objects.requireNonNull(project.getBaseDir().findFileByRelativePath(hyperlinkEvent.getDescription()))).navigate(true);
 							}
@@ -161,7 +161,7 @@ public class MyBatisGenerateCommand {
 						e.printStackTrace();
 						balloon.hide();
 						Notification notification = new Notification("Mybatis Generator Plus", null, NotificationType.ERROR);
-						notification.setTitle("Generate Code Failed");
+						notification.setTitle("Generate Failed");
 						notification.setContent("Cause:" + e.getMessage());
 						Notifications.Bus.notify(notification);
 					}

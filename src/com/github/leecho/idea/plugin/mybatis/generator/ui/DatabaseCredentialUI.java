@@ -6,6 +6,7 @@ import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorC
 import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBPasswordField;
 import com.intellij.util.ui.JBUI;
 import com.intellij.credentialStore.CredentialAttributes;
@@ -33,7 +34,7 @@ public class DatabaseCredentialUI extends DialogWrapper {
 	private Project project;
 	private JPanel contentPanel = new JBPanel<>();
 
-	private JTextField usernameField = new JBTextField(20);
+	private JTextField usernameField = new JBTextField(30);
 	private JTextField passwordField = new JBPasswordField();
 	private JLabel errorMessage = new JLabel("");
 
@@ -43,7 +44,7 @@ public class DatabaseCredentialUI extends DialogWrapper {
 		this.url = url;
 		this.project = project;
 		this.myBatisGeneratorConfiguration = MyBatisGeneratorConfiguration.getInstance(project);
-		setTitle("Database Credential");
+		setTitle("Connect Database");
 		pack();
 
 		contentPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
@@ -51,9 +52,9 @@ public class DatabaseCredentialUI extends DialogWrapper {
 
 		JPanel usernamePanel = new JBPanel<>();
 		usernamePanel.setLayout(new BoxLayout(usernamePanel, BoxLayout.X_AXIS));
-		usernamePanel.setBorder(JBUI.Borders.empty(2));
+		usernamePanel.setBorder(JBUI.Borders.empty(1));
 		JLabel usernameLabel = new JLabel("Username:");
-		usernameLabel.setPreferredSize(new Dimension(100, 20));
+		usernameLabel.setPreferredSize(new Dimension(80, 20));
 		usernamePanel.add(usernameLabel);
 		usernamePanel.add(usernameField);
 		if(credentials != null && credentials.containsKey(url)){
@@ -62,15 +63,15 @@ public class DatabaseCredentialUI extends DialogWrapper {
 
 		JPanel passwordPanel = new JBPanel<>();
 		passwordPanel.setLayout(new BoxLayout(passwordPanel, BoxLayout.X_AXIS));
-		passwordPanel.setBorder(JBUI.Borders.empty(2));
+		passwordPanel.setBorder(JBUI.Borders.empty(1));
 		JLabel passwordLabel = new JLabel("Password:");
-		passwordLabel.setPreferredSize(new Dimension(100, 20));
+		passwordLabel.setPreferredSize(new Dimension(80, 20));
 		passwordPanel.add(passwordLabel);
 		passwordPanel.add(passwordField);
 		contentPanel.add(usernamePanel);
 		contentPanel.add(passwordPanel);
 		contentPanel.add(errorMessage);
-		errorMessage.setForeground(Color.RED);
+		errorMessage.setForeground(JBColor.RED);
 		this.init();
 	}
 

@@ -163,21 +163,21 @@ public class GeneratorSettingUI extends JDialog {
 
 		JPanel clearCachePanel = new JPanel();
 		clearCachePanel.setLayout(new BoxLayout(clearCachePanel, BoxLayout.X_AXIS));
-		JButton clearCacheButton = new JButton("Clear Table Cache");
+		JButton clearCacheButton = new JButton("Clear Generate Setting");
 		JBLabel clearCacheLabel = new JBLabel("");
 		clearCachePanel.add(clearCacheButton);
 		clearCachePanel.add(clearCacheLabel);
 
 		clearCacheButton.addActionListener(e -> {
-			int confirm = Messages.showOkCancelDialog(project, "Confirm table clear cache?", "Mybatis Generator Plus", Messages.getQuestionIcon());
+			int confirm = Messages.showOkCancelDialog(project, "Confirm clear generate setting?", "Mybatis Generator Plus", Messages.getQuestionIcon());
 			if (confirm == 2) {
 				return;
 			}
 			config.setTableConfigs(null);
-			clearCacheLabel.setText("Cache table clear success!");
+			clearCacheLabel.setText("Clear generate setting successful!");
 		});
 		TitledSeparator separator = new TitledSeparator();
-		separator.setText("Clear Table Cache");
+		separator.setText("Others");
 		contentPanel.add(separator);
 		contentPanel.add(clearCachePanel);
 	}

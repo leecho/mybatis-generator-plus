@@ -13,12 +13,12 @@ import com.intellij.openapi.ui.Messages;
 public class ColumnSettingModel extends AbstractTableModel<ColumnSetting> {
 	@Override
 	protected String[] initColumnName() {
-		return new String[]{"Column", "Jdbc Type", "Java Property", "Java Type","Ignore"};
+		return new String[]{"Column", "Jdbc Type", "Java Property", "Java Type", "Ignore", "Comment"};
 	}
 
 	@Override
 	protected Object[] toObj(ColumnSetting entity) {
-		return new Object[]{entity.getColumn(), entity.getJdbcType(), entity.getJavaProperty(), entity.getJavaType(),entity.getIgnore()};
+		return new Object[]{entity.getColumn(), entity.getJdbcType(), entity.getJavaProperty(), entity.getJavaType(), entity.getIgnore(), entity.getComment()};
 	}
 
 	@Override
@@ -39,13 +39,13 @@ public class ColumnSettingModel extends AbstractTableModel<ColumnSetting> {
 				return false;
 			}
 			obj.setJavaProperty((String) val);
-		} else if (columnIndex == 3){
+		} else if (columnIndex == 3) {
 			if (obj.getJavaType().equals(val)) {
 				return false;
 			}
 			obj.setJavaType((String) val);
-		}else{
-			obj.setIgnore((Boolean)val);
+		} else if (columnIndex == 4) {
+			obj.setIgnore((Boolean) val);
 		}
 		obj.setChanged(true);
 		return true;
@@ -53,6 +53,6 @@ public class ColumnSettingModel extends AbstractTableModel<ColumnSetting> {
 
 	@Override
 	public boolean isCellEditable(int row, int column) {
-		return column != 0;
+		return column != 0 && column != 5;
 	}
 }
