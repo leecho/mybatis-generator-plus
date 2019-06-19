@@ -27,6 +27,7 @@ import com.intellij.openapi.ui.*;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiPackage;
 import com.intellij.ui.EditorTextFieldWithBrowseButton;
+import com.intellij.ui.Expandable;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
@@ -76,30 +77,28 @@ public class GenerateSettingUI extends DialogWrapper {
     private JPanel examplePackagePanel = new JPanel();
     private JPanel exampleNamePanel = new JPanel();
 
-    private JLabel connectStatusLabel = new JLabel();
-
-    private JCheckBox offsetLimitBox = new JCheckBox("Page(分页)");
-    private JCheckBox commentBox = new JCheckBox("comment(实体注释)");
+    private JCheckBox offsetLimitBox = new JCheckBox("Pageable)");
+    private JCheckBox commentBox = new JCheckBox("Comment");
     private JCheckBox overrideBox = new JCheckBox("Overwrite");
     private JCheckBox needToStringHashcodeEqualsBox = new JCheckBox("toString/hashCode/equals");
-    private JCheckBox useSchemaPrefixBox = new JCheckBox("Use-Schema(使用Schema前缀)");
-    private JCheckBox needForUpdateBox = new JCheckBox("Add-ForUpdate(select增加ForUpdate)");
-    private JCheckBox annotationDAOBox = new JCheckBox("Repository-Annotation(Repository注解)");
-    private JCheckBox useDAOExtendStyleBox = new JCheckBox("Parent-Interface(公共父接口)");
+    private JCheckBox useSchemaPrefixBox = new JCheckBox("Use Schema Prefix");
+    private JCheckBox needForUpdateBox = new JCheckBox("Add ForUpdate");
+    private JCheckBox annotationDAOBox = new JCheckBox("Repository Annotation");
+    private JCheckBox useDAOExtendStyleBox = new JCheckBox("Parent Interface");
     private JCheckBox jsr310SupportBox = new JCheckBox("JSR310: Date and Time API");
-    private JCheckBox annotationBox = new JCheckBox("JPA-Annotation(JPA注解)");
-    private JCheckBox useActualColumnNamesBox = new JCheckBox("Actual-Column(实际的列名)");
-    private JCheckBox useTableNameAliasBox = new JCheckBox("Use-Alias(启用别名查询)");
-    private JCheckBox useExampleBox = new JCheckBox("Use-Example");
-    private JCheckBox mysql8Box = new JCheckBox("mysql_8");
+    private JCheckBox annotationBox = new JCheckBox("JPA Annotation");
+    private JCheckBox useActualColumnNamesBox = new JCheckBox("Actual-Column");
+    private JCheckBox useTableNameAliasBox = new JCheckBox("Use-Alias");
+    private JCheckBox useExampleBox = new JCheckBox("Use Example");
+    private JCheckBox mysql8Box = new JCheckBox("MySQL 8");
     private JCheckBox lombokAnnotationBox = new JCheckBox("Lombok");
     private JCheckBox lombokBuilderAnnotationBox = new JCheckBox("Lombok Builder");
+    private JCheckBox swaggerAnnotationBox = new JCheckBox("Swagger Model");
 
 
     public GenerateSettingUI(AnActionEvent anActionEvent) {
         super(anActionEvent.getData(PlatformDataKeys.PROJECT));
         Project project = anActionEvent.getData(PlatformDataKeys.PROJECT);
-
         this.anActionEvent = anActionEvent;
         this.project = anActionEvent.getData(PlatformDataKeys.PROJECT);
         this.myBatisGeneratorConfiguration = MyBatisGeneratorConfiguration.getInstance(project);
@@ -156,10 +155,11 @@ public class GenerateSettingUI extends DialogWrapper {
             tableConfig.setMysql8(globalConfig.isMysql8());
             tableConfig.setLombokAnnotation(globalConfig.isLombokAnnotation());
             tableConfig.setLombokBuilderAnnotation(globalConfig.isLombokBuilderAnnotation());
+            tableConfig.setSwaggerAnnotation(globalConfig.isSwaggerAnnotation());
             tableConfig.setPrimaryKey(primaryKey);
         }
 
-        contentPane.setPreferredSize(new Dimension(700, 500));
+        contentPane.setPreferredSize(new Dimension(800, 400));
         contentPane.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
 
         //initDatabasePanel();
@@ -167,8 +167,6 @@ public class GenerateSettingUI extends DialogWrapper {
         //Model
         this.initPackagePanel();
         this.initOptionsPanel();
-
-        contentPane.add(connectStatusLabel);
 
         this.init();
     }
@@ -320,6 +318,7 @@ public class GenerateSettingUI extends DialogWrapper {
         optionsPanel.add(mysql8Box);
         optionsPanel.add(lombokAnnotationBox);
         optionsPanel.add(lombokBuilderAnnotationBox);
+        optionsPanel.add(swaggerAnnotationBox);
 
         useExampleBox.addChangeListener(e -> {
             exampleNamePanel.setVisible(useExampleBox.getSelectedObjects() != null);
@@ -342,6 +341,7 @@ public class GenerateSettingUI extends DialogWrapper {
         mysql8Box.setSelected(tableConfig.isMysql8());
         lombokAnnotationBox.setSelected(tableConfig.isLombokAnnotation());
         lombokBuilderAnnotationBox.setSelected(tableConfig.isLombokBuilderAnnotation());
+        swaggerAnnotationBox.setSelected(tableConfig.isSwaggerAnnotation());
         contentPane.add(optionsPanel);
     }
 
@@ -353,7 +353,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel moduleRootPanel = new JPanel();
         moduleRootPanel.setLayout(new BoxLayout(moduleRootPanel, BoxLayout.X_AXIS));
         JBLabel projectRootLabel = new JBLabel("Module Root:");
-        projectRootLabel.setPreferredSize(new Dimension(150, 20));
+        projectRootLabel.setPreferredSize(new Dimension(150, 10));
         moduleRootField.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -372,7 +372,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel basePackagePanel = new JPanel();
         basePackagePanel.setLayout(new BoxLayout(basePackagePanel, BoxLayout.X_AXIS));
         JBLabel basePackageLabel = new JBLabel("Base Package:");
-        basePackageLabel.setPreferredSize(new Dimension(150, 20));
+        basePackageLabel.setPreferredSize(new Dimension(150, 10));
         basePackageField = new EditorTextFieldWithBrowseButton(project, false);
         basePackageField.addActionListener(e -> {
             final PackageChooserDialog chooser = new PackageChooserDialog("Select Base Package", project);
@@ -380,10 +380,12 @@ public class GenerateSettingUI extends DialogWrapper {
             chooser.show();
             final PsiPackage psiPackage = chooser.getSelectedPackage();
             String packageName = psiPackage == null ? null : psiPackage.getQualifiedName();
-            basePackageField.setText(packageName);
-            domainPackageField.setText(packageName + ".domain");
-            mapperPackageField.setText(packageName + "." + getMapperPostfix().toLowerCase());
-            examplePackageField.setText(packageName + "." + getExamplePostfix().toLowerCase());
+            if (!StringUtils.isEmpty(packageName)) {
+                basePackageField.setText(packageName);
+                domainPackageField.setText(packageName + ".domain");
+                mapperPackageField.setText(packageName + "." + getMapperPostfix().toLowerCase());
+                examplePackageField.setText(packageName + "." + getExamplePostfix().toLowerCase());
+            }
         });
         if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getBasePackage())) {
             basePackageField.setText(tableConfig.getBasePackage());
@@ -399,7 +401,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel entityPackagePanel = new JPanel();
         entityPackagePanel.setLayout(new BoxLayout(entityPackagePanel, BoxLayout.X_AXIS));
         JBLabel entityPackageLabel = new JBLabel("Domain Package:");
-        entityPackageLabel.setPreferredSize(new Dimension(150, 20));
+        entityPackageLabel.setPreferredSize(new Dimension(150, 10));
         domainPackageField.addActionListener(e -> {
             final PackageChooserDialog chooser = new PackageChooserDialog("Select Entity Package", project);
             chooser.selectPackage(domainPackageField.getText());
@@ -419,7 +421,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel mapperPackagePanel = new JPanel();
         mapperPackagePanel.setLayout(new BoxLayout(mapperPackagePanel, BoxLayout.X_AXIS));
         JLabel mapperPackageLabel = new JLabel("Mapper Package:");
-        mapperPackageLabel.setPreferredSize(new Dimension(150, 20));
+        mapperPackageLabel.setPreferredSize(new Dimension(150, 10));
         mapperPackageField = new EditorTextFieldWithBrowseButton(project, false);
         mapperPackageField.addActionListener(event -> {
             final PackageChooserDialog packageChooserDialog = new PackageChooserDialog("Select Mapper Package", project);
@@ -452,7 +454,7 @@ public class GenerateSettingUI extends DialogWrapper {
         });
 
         JLabel examplePackageLabel = new JLabel("Example Package:");
-        examplePackageLabel.setPreferredSize(new Dimension(150, 20));
+        examplePackageLabel.setPreferredSize(new Dimension(150, 10));
         examplePackageField.setText(tableConfig.getExamplePackage());
         examplePackagePanel.add(examplePackageLabel);
         examplePackagePanel.add(examplePackageField);
@@ -461,7 +463,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel xmlPackagePanel = new JPanel();
         xmlPackagePanel.setLayout(new BoxLayout(xmlPackagePanel, BoxLayout.X_AXIS));
         JLabel xmlPackageLabel = new JLabel("Xml Package:");
-        xmlPackageLabel.setPreferredSize(new Dimension(150, 20));
+        xmlPackageLabel.setPreferredSize(new Dimension(150, 10));
         xmlPackageField.setText(tableConfig.getXmlPackage());
         xmlPackagePanel.add(xmlPackageLabel);
         xmlPackagePanel.add(xmlPackageField);
@@ -494,7 +496,7 @@ public class GenerateSettingUI extends DialogWrapper {
         tableNamePanel.setLayout(new BoxLayout(tableNamePanel, BoxLayout.X_AXIS));
         JLabel tableLabel = new JLabel("Table Name:");
         tableLabel.setLabelFor(tableNameField);
-        tableLabel.setPreferredSize(new Dimension(150, 20));
+        tableLabel.setPreferredSize(new Dimension(150, 10));
         tableNamePanel.add(tableLabel);
         tableNamePanel.add(tableNameField);
         tableNamePanel.add(columnSettingButton);
@@ -525,7 +527,7 @@ public class GenerateSettingUI extends DialogWrapper {
         primaryPanel.setLayout(new BoxLayout(primaryPanel, BoxLayout.X_AXIS));
         JLabel primaryKeyLabel = new JLabel("Primary Key:");
         primaryKeyLabel.setLabelFor(primaryKeyField);
-        primaryKeyLabel.setPreferredSize(new Dimension(150, 20));
+        primaryKeyLabel.setPreferredSize(new Dimension(150, 10));
         primaryPanel.add(primaryKeyLabel);
         primaryPanel.add(primaryKeyField);
 
@@ -535,7 +537,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel domainNamePanel = new JPanel();
         domainNamePanel.setLayout(new BoxLayout(domainNamePanel, BoxLayout.X_AXIS));
         JLabel entityNameLabel = new JLabel("Domain Name:");
-        entityNameLabel.setPreferredSize(new Dimension(150, 20));
+        entityNameLabel.setPreferredSize(new Dimension(150, 10));
         domainNamePanel.add(entityNameLabel);
         domainNamePanel.add(domainNameField);
         entityPanel.add(domainNamePanel);
@@ -556,7 +558,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel mapperNamePanel = new JPanel();
         mapperNamePanel.setLayout(new BoxLayout(mapperNamePanel, BoxLayout.X_AXIS));
         JLabel mapperNameLabel = new JLabel("Mapper Name:");
-        mapperNameLabel.setPreferredSize(new Dimension(150, 20));
+        mapperNameLabel.setPreferredSize(new Dimension(150, 10));
         mapperNameLabel.setLabelFor(domainNameField);
         mapperNamePanel.add(mapperNameLabel);
         mapperNamePanel.add(mapperNameField);
@@ -572,7 +574,7 @@ public class GenerateSettingUI extends DialogWrapper {
 
         exampleNamePanel.setLayout(new BoxLayout(exampleNamePanel, BoxLayout.X_AXIS));
         JLabel exampleNameLabel = new JLabel("Example Name:");
-        exampleNameLabel.setPreferredSize(new Dimension(150, 20));
+        exampleNameLabel.setPreferredSize(new Dimension(150, 10));
         exampleNameLabel.setLabelFor(domainNameField);
         exampleNamePanel.add(exampleNameLabel);
         exampleNamePanel.add(exampleNameField);
@@ -627,7 +629,7 @@ public class GenerateSettingUI extends DialogWrapper {
         tableConfig.setMysql8(mysql8Box.getSelectedObjects() != null);
         tableConfig.setLombokAnnotation(lombokAnnotationBox.getSelectedObjects() != null);
         tableConfig.setLombokBuilderAnnotation(lombokBuilderAnnotationBox.getSelectedObjects() != null);
-
+        tableConfig.setSwaggerAnnotation(swaggerAnnotationBox.getSelectedObjects() != null);
         tableConfig.setSourcePath(this.tableConfig.getSourcePath());
         tableConfig.setResourcePath(this.tableConfig.getResourcePath());
 

@@ -494,6 +494,12 @@ public class MyBatisGenerateCommand {
 			}
 			context.addPluginConfiguration(lombokPlugin);
 		}
+		if (tableConfig.isSwaggerAnnotation()) {
+			PluginConfiguration swaggerPlugin = new PluginConfiguration();
+			swaggerPlugin.addProperty("type", "com.github.leecho.idea.plugin.mybatis.generator.plugin.SwaggerPlugin");
+			swaggerPlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.SwaggerPlugin");
+			context.addPluginConfiguration(swaggerPlugin);
+		}
 
 		if (tableConfig.isUseExample()) {
 			PluginConfiguration renameExamplePlugin = new PluginConfiguration();

@@ -41,22 +41,24 @@ public class GeneratorSettingUI extends JDialog {
     private JTextField mapperPostfixField = new JTextField(10);
     private JTextField examplePostfixField = new JTextField(10);
 
-    private JCheckBox offsetLimitBox = new JCheckBox("Page(分页)");
-    private JCheckBox commentBox = new JCheckBox("Comment(实体注释)");
+    private JCheckBox offsetLimitBox = new JCheckBox("Pageable)");
+    private JCheckBox commentBox = new JCheckBox("Comment");
     private JCheckBox overrideBox = new JCheckBox("Overwrite");
     private JCheckBox needToStringHashcodeEqualsBox = new JCheckBox("toString/hashCode/equals");
-    private JCheckBox useSchemaPrefixBox = new JCheckBox("Use-Schema(使用Schema前缀)");
-    private JCheckBox needForUpdateBox = new JCheckBox("Add-ForUpdate(select增加ForUpdate)");
-    private JCheckBox annotationDAOBox = new JCheckBox("Repository-Annotation(Repository注解)");
-    private JCheckBox useDAOExtendStyleBox = new JCheckBox("Parent-Interface(公共父接口)");
+    private JCheckBox useSchemaPrefixBox = new JCheckBox("Use Schema Prefix");
+    private JCheckBox needForUpdateBox = new JCheckBox("Add ForUpdate");
+    private JCheckBox annotationDAOBox = new JCheckBox("Repository Annotation");
+    private JCheckBox useDAOExtendStyleBox = new JCheckBox("Parent Interface");
     private JCheckBox jsr310SupportBox = new JCheckBox("JSR310: Date and Time API");
-    private JCheckBox annotationBox = new JCheckBox("JPA-Annotation(JPA注解)");
-    private JCheckBox useActualColumnNamesBox = new JCheckBox("Actual-Column(实际的列名)");
-    private JCheckBox useTableNameAliasBox = new JCheckBox("Use-Alias(启用别名查询)");
-    private JCheckBox useExampleBox = new JCheckBox("Use-Example");
-    private JCheckBox mysql_8Box = new JCheckBox("mysql_8");
+    private JCheckBox annotationBox = new JCheckBox("JPA Annotation");
+    private JCheckBox useActualColumnNamesBox = new JCheckBox("Actual-Column");
+    private JCheckBox useTableNameAliasBox = new JCheckBox("Use-Alias");
+    private JCheckBox useExampleBox = new JCheckBox("Use Example");
+    private JCheckBox mysql8Box = new JCheckBox("MySQL 8");
     private JCheckBox lombokAnnotationBox = new JCheckBox("Lombok");
     private JCheckBox lombokBuilderAnnotationBox = new JCheckBox("Lombok Builder");
+    private JCheckBox swaggerAnnotationBox = new JCheckBox("Swagger Model");
+
 
     private MyBatisGeneratorConfiguration config;
 
@@ -95,9 +97,10 @@ public class GeneratorSettingUI extends JDialog {
         optionsPanel.add(useActualColumnNamesBox);
         optionsPanel.add(useTableNameAliasBox);
         optionsPanel.add(useExampleBox);
-        optionsPanel.add(mysql_8Box);
+        optionsPanel.add(mysql8Box);
         optionsPanel.add(lombokAnnotationBox);
         optionsPanel.add(lombokBuilderAnnotationBox);
+        optionsPanel.add(swaggerAnnotationBox);
 
         TitledSeparator separator = new TitledSeparator();
         separator.setText("Options");
@@ -295,9 +298,10 @@ public class GeneratorSettingUI extends JDialog {
         modified |= (this.useActualColumnNamesBox.getSelectedObjects() != null) == (config.getGlobalConfig().isUseActualColumnNames());
         modified |= (this.useTableNameAliasBox.getSelectedObjects() != null) == (config.getGlobalConfig().isUseTableNameAlias());
         modified |= (this.useExampleBox.getSelectedObjects() != null) == (config.getGlobalConfig().isUseExample());
-        modified |= (this.mysql_8Box.getSelectedObjects() != null) == (config.getGlobalConfig().isMysql8());
+        modified |= (this.mysql8Box.getSelectedObjects() != null) == (config.getGlobalConfig().isMysql8());
         modified |= (this.lombokAnnotationBox.getSelectedObjects() != null) == (config.getGlobalConfig().isLombokAnnotation());
         modified |= (this.lombokBuilderAnnotationBox.getSelectedObjects() != null) == (config.getGlobalConfig().isLombokBuilderAnnotation());
+        modified |= (this.swaggerAnnotationBox.getSelectedObjects() != null) == (config.getGlobalConfig().isSwaggerAnnotation());
         return modified;
     }
 
@@ -323,9 +327,10 @@ public class GeneratorSettingUI extends JDialog {
         globalConfig.setUseActualColumnNames(useActualColumnNamesBox.getSelectedObjects() != null);
         globalConfig.setUseTableNameAlias(useTableNameAliasBox.getSelectedObjects() != null);
         globalConfig.setUseExample(useExampleBox.getSelectedObjects() != null);
-        globalConfig.setMysql8(mysql_8Box.getSelectedObjects() != null);
+        globalConfig.setMysql8(mysql8Box.getSelectedObjects() != null);
         globalConfig.setLombokAnnotation(lombokAnnotationBox.getSelectedObjects() != null);
         globalConfig.setLombokBuilderAnnotation(lombokBuilderAnnotationBox.getSelectedObjects() != null);
+        globalConfig.setSwaggerAnnotation(swaggerAnnotationBox.getSelectedObjects() != null);
 
         globalConfig.setSourcePath(sourcePathField.getText());
         globalConfig.setResourcePath(resourcePathField.getText());
@@ -360,9 +365,11 @@ public class GeneratorSettingUI extends JDialog {
         useActualColumnNamesBox.setSelected(globalConfig.isUseActualColumnNames());
         useTableNameAliasBox.setSelected(globalConfig.isUseTableNameAlias());
         useExampleBox.setSelected(globalConfig.isUseExample());
-        mysql_8Box.setSelected(globalConfig.isMysql8());
+        mysql8Box.setSelected(globalConfig.isMysql8());
         lombokAnnotationBox.setSelected(globalConfig.isLombokAnnotation());
         lombokBuilderAnnotationBox.setSelected(globalConfig.isLombokBuilderAnnotation());
+        swaggerAnnotationBox.setSelected(globalConfig.isSwaggerAnnotation());
+
     }
 
     @Override

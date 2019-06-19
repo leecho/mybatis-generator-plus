@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.github.leecho.idea.plugin.mybatis.generator</id>
     <name>MyBatis Generator Plus</name>
-    <version>1.3</version>
+    <version>1.4</version>
     <vendor email="leecho571@gmail.com" url="https://github.com/leecho/mybatis-generator-plus">Leecho</vendor>
 
     <description>
@@ -59,25 +59,20 @@
         <![CDATA[
    <ul>
        <li>v1.0<br/>
-            Support mapper class file merge
-            Support mapper xml file merge
-            Support customize postfix for mapper class
-            Support customize postfix for example class
-            Support customize setting for column
-            Support for IDEA the latest version.<br/>
-            Optimize Mysql8 database connection.<br/>
-            Add MariaDB support
+            Init Version
         </li>
-   </ul>
-    ]]>
-        <![CDATA[
-   <ul>
-       <li>v1.0<br/>
-            支持Mapper类文件自动合并<br/>
-            支付Mapper XML文件自动合并<br/>
-            支持自定义Mapper类后缀<br/>
-            支持自定义Example类后缀<br/>
-            支持自定义表格列设置<br/>
+       <li>v1.1<br/>
+            Update description
+        </li>
+       <li>v1.2<br/>
+            add comment column for column setting ui<br/>
+            fix database column type change bug
+        </li>
+        <li>v1.3<br/>
+            optimization some feature
+        </li>
+        <li>v1.4<br/>
+            add swagger support
         </li>
    </ul>
     ]]>

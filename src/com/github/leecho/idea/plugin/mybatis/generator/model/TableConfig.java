@@ -139,6 +139,8 @@ public class TableConfig {
 
 	private boolean lombokBuilderAnnotation;
 
+	private boolean swaggerAnnotation;
+
 	private String encoding;
 	private String connectorJarPath;
 
@@ -386,6 +388,14 @@ public class TableConfig {
 
 	public void setLombokBuilderAnnotation(boolean lombokBuilderAnnotation) {
 		this.lombokBuilderAnnotation = lombokBuilderAnnotation;
+	}
+
+	public boolean isSwaggerAnnotation() {
+		return swaggerAnnotation;
+	}
+
+	public void setSwaggerAnnotation(boolean swaggerAnnotation) {
+		this.swaggerAnnotation = swaggerAnnotation;
 	}
 
 	public String getExamplePackage() {

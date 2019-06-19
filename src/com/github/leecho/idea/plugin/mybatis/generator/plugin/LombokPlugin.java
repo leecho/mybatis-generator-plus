@@ -197,6 +197,9 @@ public class LombokPlugin extends PluginAdapter {
     }
 
     private enum Annotations {
+        /**
+         *
+         */
         DATA("data", "@Data", "lombok.Data"),
         BUILDER("builder", "@Builder", "lombok.Builder"),
         ALL_ARGS_CONSTRUCTOR("allArgsConstructor", "@AllArgsConstructor", "lombok.AllArgsConstructor"),

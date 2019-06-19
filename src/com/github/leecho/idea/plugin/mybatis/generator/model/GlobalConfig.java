@@ -87,6 +87,7 @@ public class GlobalConfig {
 
 	private boolean lombokBuilderAnnotation;
 
+	private boolean swaggerAnnotation;
 
 	public String getSourcePath() {
 		return sourcePath;
@@ -286,6 +287,14 @@ public class GlobalConfig {
 
 	public void setExamplePackage(String examplePackage) {
 		this.examplePackage = examplePackage;
+	}
+
+	public boolean isSwaggerAnnotation() {
+		return swaggerAnnotation;
+	}
+
+	public void setSwaggerAnnotation(boolean swaggerAnnotation) {
+		this.swaggerAnnotation = swaggerAnnotation;
 	}
 
 	public static GlobalConfig getDefault() {
