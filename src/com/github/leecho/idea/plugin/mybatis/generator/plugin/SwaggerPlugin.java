@@ -105,7 +105,7 @@ public class SwaggerPlugin extends PluginAdapter {
      */
     private void addAnnotations(TopLevelClass topLevelClass, String name) {
         topLevelClass.addImportedType(new FullyQualifiedJavaType("io.swagger.annotations.ApiModel"));
-        String[] parts = name.split(".");
+        String[] parts = name.split("\\.");
         topLevelClass.addAnnotation(String.format("@ApiModel(\"%s\")", parts[parts.length - 1]));
     }
 

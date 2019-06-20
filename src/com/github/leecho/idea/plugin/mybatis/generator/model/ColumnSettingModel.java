@@ -22,32 +22,32 @@ public class ColumnSettingModel extends AbstractTableModel<ColumnSetting> {
 	}
 
 	@Override
-	protected boolean setVal(ColumnSetting obj, int columnIndex, Object val) {
+	protected boolean setVal(ColumnSetting setting, int columnIndex, Object val) {
 		if (val == null || String.valueOf(val).length() == 0 || String.valueOf(val).equals("")) {
 			Messages.showMessageDialog("The value must not be null", "Mybatis Generator Plus", Messages.getWarningIcon());
 			return false;
 		}
 		if (columnIndex == 0) {
-			obj.setColumn((String) val);
+			setting.setColumn((String) val);
 		} else if (columnIndex == 1) {
-			if (obj.getJdbcType().equals(val)) {
+			if (setting.getJdbcType().equals(val)) {
 				return false;
 			}
-			obj.setJdbcType((String) val);
+			setting.setJdbcType((String) val);
 		} else if (columnIndex == 2) {
-			if (obj.getJavaProperty().equals(val)) {
+			if (setting.getJavaProperty().equals(val)) {
 				return false;
 			}
-			obj.setJavaProperty((String) val);
+			setting.setJavaProperty((String) val);
 		} else if (columnIndex == 3) {
-			if (obj.getJavaType().equals(val)) {
+			if (setting.getJavaType().equals(val)) {
 				return false;
 			}
-			obj.setJavaType((String) val);
+			setting.setJavaType((String) val);
 		} else if (columnIndex == 4) {
-			obj.setIgnore((Boolean) val);
+			setting.setIgnore((Boolean) val);
 		}
-		obj.setChanged(true);
+		setting.setChanged(true);
 		return true;
 	}
 

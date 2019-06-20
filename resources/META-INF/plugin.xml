@@ -7,11 +7,12 @@
     <description>
         <![CDATA[
    <ul>
-       <li>v1.0<br/>
+       <li>
             Support mapper class file merge
             Support mapper xml file merge
             Support customize postfix for mapper class
             Support customize postfix for example class
+            Support table prefix for domain class
             Support customize setting for column
             Support for IDEA the latest version.<br/>
             Optimize Mysql8 database connection.<br/>
@@ -21,9 +22,10 @@
     ]]>
         <![CDATA[
    <ul>
-       <li>v1.0<br/>
+       <li>
             支持Mapper类文件自动合并<br/>
-            支付Mapper XML文件自动合并<br/>
+            支持Mapper XML文件自动合并<br/>
+            支持自动忽略表前缀<br/>
             支持自定义Mapper类后缀<br/>
             支持自定义Example类后缀<br/>
             支持自定义表格列设置<br/>
@@ -72,7 +74,10 @@
             optimization some feature
         </li>
         <li>v1.4<br/>
-            add swagger support
+            add swagger support options<br/>
+            add table prefix support<br/>
+            new ui for generate setting<br/>
+            fixed some bugs<br/>
         </li>
    </ul>
     ]]>

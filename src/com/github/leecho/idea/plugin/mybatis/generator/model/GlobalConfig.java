@@ -13,6 +13,7 @@ public class GlobalConfig {
 	private String examplePackage;
 	private String xmlPackage;
 
+	private String tablePrefix;
 
 	/**
 	 * 是否分页
@@ -295,6 +296,14 @@ public class GlobalConfig {
 
 	public void setSwaggerAnnotation(boolean swaggerAnnotation) {
 		this.swaggerAnnotation = swaggerAnnotation;
+	}
+
+	public String getTablePrefix() {
+		return tablePrefix;
+	}
+
+	public void setTablePrefix(String tablePrefix) {
+		this.tablePrefix = tablePrefix;
 	}
 
 	public static GlobalConfig getDefault() {

@@ -38,10 +38,12 @@ public class GeneratorSettingUI extends JDialog {
     private JTextField sourcePathField = new JTextField();
     private JTextField resourcePathField = new JTextField();
 
+    private JTextField tablePrefixField = new JTextField(10);
+
     private JTextField mapperPostfixField = new JTextField(10);
     private JTextField examplePostfixField = new JTextField(10);
 
-    private JCheckBox offsetLimitBox = new JCheckBox("Pageable)");
+    private JCheckBox offsetLimitBox = new JCheckBox("Pageable");
     private JCheckBox commentBox = new JCheckBox("Comment");
     private JCheckBox overrideBox = new JCheckBox("Overwrite");
     private JCheckBox needToStringHashcodeEqualsBox = new JCheckBox("toString/hashCode/equals");
@@ -82,7 +84,7 @@ public class GeneratorSettingUI extends JDialog {
     }
 
     private void initOptionsPanel() {
-        JBPanel optionsPanel = new JBPanel(new GridLayout(8, 2, 10, 10));
+        JBPanel optionsPanel = new JBPanel(new GridLayout(6, 2, 10, 10));
 
         optionsPanel.add(offsetLimitBox);
         optionsPanel.add(commentBox);
@@ -160,6 +162,22 @@ public class GeneratorSettingUI extends JDialog {
 
     private void initPostfixPanel() {
 
+        JPanel tablePrefixPanel = new JPanel();
+        tablePrefixPanel.setLayout(new BoxLayout(tablePrefixPanel, BoxLayout.X_AXIS));
+        JBLabel tablePrefixLabel = new JBLabel("Table Prefix:");
+        tablePrefixLabel.setPreferredSize(new Dimension(200, 20));
+        tablePrefixPanel.add(tablePrefixLabel);
+        tablePrefixPanel.add(tablePrefixField);
+
+        JPanel prefixPanel = new JPanel();
+        prefixPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
+        TitledSeparator separator = new TitledSeparator();
+        separator.setText("Prefix");
+        prefixPanel.add(tablePrefixPanel);
+        contentPanel.add(separator);
+        contentPanel.add(prefixPanel);
+
+
         JPanel mapperPostfixPanel = new JPanel();
         mapperPostfixPanel.setLayout(new BoxLayout(mapperPostfixPanel, BoxLayout.X_AXIS));
         JBLabel mapperPostfixLabel = new JBLabel("Mapper Postfix:");
@@ -176,11 +194,11 @@ public class GeneratorSettingUI extends JDialog {
 
         JPanel postfixPanel = new JPanel();
         postfixPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
-        TitledSeparator separator = new TitledSeparator();
-        separator.setText("Postfix");
+        TitledSeparator separator2 = new TitledSeparator();
+        separator2.setText("Postfix");
         postfixPanel.add(mapperPostfixPanel);
         postfixPanel.add(examplePostfixPanel);
-        contentPanel.add(separator);
+        contentPanel.add(separator2);
         contentPanel.add(postfixPanel);
     }
 
@@ -285,6 +303,7 @@ public class GeneratorSettingUI extends JDialog {
         modified |= !this.examplePackageField.getText().equals(config.getGlobalConfig().getExamplePackage());
         modified |= !this.mapperPostfixField.getText().equals(config.getGlobalConfig().getMapperPostfix());
         modified |= !this.examplePostfixField.getText().equals(config.getGlobalConfig().getExamplePostfix());
+        modified |= !this.tablePrefixField.getText().equals(config.getGlobalConfig().getTablePrefix());
         modified |= !this.sourcePathField.getText().equals(config.getGlobalConfig().getSourcePath());
         modified |= !this.resourcePathField.getText().equals(config.getGlobalConfig().getResourcePath());
         modified |= (this.offsetLimitBox.getSelectedObjects() != null) == (config.getGlobalConfig().isOffsetLimit());
@@ -310,6 +329,7 @@ public class GeneratorSettingUI extends JDialog {
         globalConfig.setModuleRootPath(moduleRootField.getText());
         globalConfig.setMapperPostfix(mapperPostfixField.getText());
         globalConfig.setExamplePostfix(examplePostfixField.getText());
+        globalConfig.setTablePrefix(tablePrefixField.getText());
         globalConfig.setDomainPackage(domainPackageField.getText());
         globalConfig.setMapperPackage(mapperPackageField.getText());
         globalConfig.setExamplePackage(examplePackageField.getText());
@@ -344,6 +364,7 @@ public class GeneratorSettingUI extends JDialog {
         GlobalConfig globalConfig = config.getGlobalConfig();
         mapperPostfixField.setText(globalConfig.getMapperPostfix());
         examplePostfixField.setText(globalConfig.getExamplePostfix());
+        tablePrefixField.setText(globalConfig.getTablePrefix());
         domainPackageField.setText(globalConfig.getDomainPackage());
         mapperPackageField.setText(globalConfig.getMapperPackage());
         examplePackageField.setText(globalConfig.getExamplePackage());
