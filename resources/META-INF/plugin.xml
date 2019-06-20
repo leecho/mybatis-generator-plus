@@ -8,12 +8,13 @@
         <![CDATA[
    <ul>
        <li>
-            Support mapper class file merge
-            Support mapper xml file merge
-            Support customize postfix for mapper class
-            Support customize postfix for example class
-            Support table prefix for domain class
-            Support customize setting for column
+            Integrate with the Idea Database tool<br/>
+            Support mapper class file merge<br/>
+            Support mapper xml file merge<br/>
+            Support customize postfix for mapper class<br/>
+            Support customize postfix for example class<br/>
+            Support table prefix for domain class<br/>
+            Support customize setting for column<br/>
             Support for IDEA the latest version.<br/>
             Optimize Mysql8 database connection.<br/>
             Add MariaDB support
@@ -23,6 +24,7 @@
         <![CDATA[
    <ul>
        <li>
+            集成Idea Database工具<br/>
             支持Mapper类文件自动合并<br/>
             支持Mapper XML文件自动合并<br/>
             支持自动忽略表前缀<br/>
