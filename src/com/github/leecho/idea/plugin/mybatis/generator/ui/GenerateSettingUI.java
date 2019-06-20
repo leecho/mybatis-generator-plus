@@ -500,6 +500,14 @@ public class GenerateSettingUI extends DialogWrapper {
                 examplePackageField.setText(packageName + "." + getExamplePostfix().toLowerCase());
             }
         });
+        basePackageField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                domainPackageField.setText(basePackageField.getText() + ".domain");
+                mapperPackageField.setText(basePackageField.getText() + "." + getMapperPostfix().toLowerCase());
+                examplePackageField.setText(basePackageField.getText() + "." + getExamplePostfix().toLowerCase());
+            }
+        });
         if (tableConfig != null && !StringUtils.isEmpty(tableConfig.getBasePackage())) {
             basePackageField.setText(tableConfig.getBasePackage());
         } else {

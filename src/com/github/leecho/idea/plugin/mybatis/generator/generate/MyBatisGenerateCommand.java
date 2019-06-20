@@ -237,7 +237,8 @@ public class MyBatisGenerateCommand {
 
 		JDBCConnectionConfiguration jdbcConfig = new JDBCConnectionConfiguration();
 		jdbcConfig.addProperty("nullCatalogMeansCurrent", "true");
-
+		jdbcConfig.addProperty("remarks","true");
+		jdbcConfig.addProperty("useInformationSchema","true");
 
 		Map<String, Credential> users = myBatisGeneratorConfiguration.getCredentials();
 		//if (users != null && users.containsKey(url)) {

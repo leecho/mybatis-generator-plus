@@ -42,7 +42,7 @@ public class SwaggerPlugin extends PluginAdapter {
             TopLevelClass topLevelClass,
             IntrospectedTable introspectedTable
     ) {
-        addAnnotations(topLevelClass, introspectedTable.getBaseRecordType());
+        addAnnotations(topLevelClass, introspectedTable.getRemarks());
         return true;
     }
 
@@ -59,7 +59,7 @@ public class SwaggerPlugin extends PluginAdapter {
             TopLevelClass topLevelClass,
             IntrospectedTable introspectedTable
     ) {
-        addAnnotations(topLevelClass, introspectedTable.getBaseRecordType());
+        addAnnotations(topLevelClass, introspectedTable.getRemarks());
         return true;
     }
 
@@ -76,7 +76,7 @@ public class SwaggerPlugin extends PluginAdapter {
             TopLevelClass topLevelClass,
             IntrospectedTable introspectedTable
     ) {
-        addAnnotations(topLevelClass, introspectedTable.getBaseRecordType());
+        addAnnotations(topLevelClass, introspectedTable.getRemarks());
         return true;
     }
 
