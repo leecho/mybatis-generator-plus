@@ -49,7 +49,7 @@
         <li>在idea的database工具中使用，右击选择表生成mybatis相关的代码。目前已支持的数据库：Mysql、Mysql8(可能需要设置数据库时区time_zone = '+8:00')、Oracle、MariaDB。待验证：PostgreSQL与SQL Server </li>
         <li>Step1: 连接Database: <kbd>View</kbd> > <kbd>Tool Windows</kbd> > <kbd>Database</kbd>。</li>
         <li>Step2: 选择表，右击选择功能 <kbd>Generate MyBatis Code</kbd> 打开主页面。</li>
-        <li>Step3:检查配置无误后点击 <kbd>ok</kbd>。</li>
+        <li>Step3: 检查配置无误后点击 <kbd>ok</kbd>。</li>
         <li>Step4: 首次使用时请提供账号密码。p</li>
         <li>Step5: 生成完成，检查、使用代码。</li>
    <li>Setting: <kbd>Tools</kbd> > <kbd>MyBatis Generator Plus</kbd> 此处设置默认配置，未设置则使用程序默认配置。</li>
