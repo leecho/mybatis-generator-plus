@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.github.leecho.idea.plugin.mybatis.generator</id>
     <name>MyBatis Generator Plus</name>
-    <version>1.4</version>
+    <version>1.5</version>
     <vendor email="leecho571@gmail.com" url="https://github.com/leecho/mybatis-generator-plus">Leecho</vendor>
 
     <description>
@@ -81,6 +81,12 @@
             add table prefix support<br/>
             new ui for generate setting<br/>
             fixed some bugs<br/>
+        </li>
+        <li>v1.5<br/>
+            fix cannot get table remark bug<br/>
+            fix cannot support sql server bug<br/>
+            add progressbar for display connect to database<br/>
+            <br/>
         </li>
    </ul>
     ]]>

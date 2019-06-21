@@ -16,12 +16,11 @@ import com.intellij.database.psi.DbDataSource;
 import com.intellij.database.psi.DbTable;
 import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.ide.util.PackageChooserDialog;
-import com.intellij.notification.*;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
-import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.*;
 import com.intellij.psi.PsiElement;
@@ -37,7 +36,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
@@ -46,7 +44,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 /**
  * 插件主界面
@@ -119,9 +119,9 @@ public class GenerateSettingUI extends DialogWrapper {
         TableInfo tableInfo = new TableInfo((DbTable) psiElement);
         String tableName = tableInfo.getTableName();
         String realTableName;
-        if(globalConfig.getTablePrefix() != null && tableName.startsWith(globalConfig.getTablePrefix())){
+        if (globalConfig.getTablePrefix() != null && tableName.startsWith(globalConfig.getTablePrefix())) {
             realTableName = tableName.substring(globalConfig.getTablePrefix().length());
-        }else{
+        } else {
             realTableName = tableName;
         }
         String entityName = StringUtils.dbStringToCamelStyle(realTableName);
@@ -233,7 +233,28 @@ public class GenerateSettingUI extends DialogWrapper {
             return;
         }
 
-        RawConnectionConfig connectionConfig = ((DbDataSource) psiElements[0].getParent().getParent()).getConnectionConfig();
+        DbDataSource dbDataSource = null;
+        PsiElement current = psiElements[0];
+        while (current != null) {
+            if (DbDataSource.class.isAssignableFrom(current.getClass())) {
+                dbDataSource = (DbDataSource) current;
+                break;
+            }
+            current = current.getParent();
+        }
+
+        if (dbDataSource == null) {
+            Messages.showMessageDialog(project, "Cannot get datasource", "Mybatis Generator Plus", Messages.getErrorIcon());
+            return;
+        }
+
+        RawConnectionConfig connectionConfig = dbDataSource.getConnectionConfig();
+
+        if (connectionConfig == null) {
+            Messages.showMessageDialog(project, "Cannot get connection config", "Mybatis Generator Plus", Messages.getErrorIcon());
+            return;
+        }
+
         Map<String, Credential> credentials = myBatisGeneratorConfiguration.getCredentials();
         Credential credential;
         if (credentials == null || !credentials.containsKey(connectionConfig.getUrl())) {
@@ -247,21 +268,46 @@ public class GenerateSettingUI extends DialogWrapper {
         } else {
             credential = credentials.get(connectionConfig.getUrl());
         }
-
-        if (this.testConnection(connectionConfig, credential)) {
-            NotificationGroup balloonNotifications = new NotificationGroup("Mybatis Generator Plus", NotificationDisplayType.STICKY_BALLOON, true);
-            Notification notification = balloonNotifications.createNotification("Connect to database successfully", "", NotificationType.INFORMATION, (notification1, hyperlinkEvent) -> {
-                if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    new OpenFileDescriptor(project, Objects.requireNonNull(project.getBaseDir().findFileByRelativePath(hyperlinkEvent.getDescription()))).navigate(true);
+        Callable<Exception> callable = new Callable<Exception>() {
+            @Override
+            public Exception call() {
+                String url = connectionConfig.getUrl();
+                CredentialAttributes credentialAttributes = new CredentialAttributes(PluginContants.PLUGIN_NAME + "-" + url, credential.getUsername(), this.getClass(), false);
+                String password = PasswordSafe.getInstance().getPassword(credentialAttributes);
+                try {
+                    DatabaseUtils.testConnection(connectionConfig.getDriverClass(), connectionConfig.getUrl(), credential.getUsername(), password, mysql8Box.getSelectedObjects() != null);
+                } catch (ClassNotFoundException | SQLException e) {
+                    return e;
                 }
-            });
-            Notifications.Bus.notify(notification);
-        } else {
+                return null;
+            }
+        };
+        FutureTask<Exception> future = new FutureTask<>(callable);
+        ProgressManager.getInstance().runProcessWithProgressSynchronously(future, "Connect to Database", true, project);
+        Exception exception;
+        try {
+            exception = future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            Messages.showMessageDialog(project, "Failed to connect to database \n " + e.getMessage(), "Mybatis Generator Plus", Messages.getErrorIcon());
+            return;
+        }
+        if (exception != null) {
+            Messages.showMessageDialog(project, "Failed to connect to database \n " + exception.getMessage(), "Mybatis Generator Plus", Messages.getErrorIcon());
+            if (exception.getClass().equals(SQLException.class)) {
+                SQLException sqlException = (SQLException) exception;
+                if (sqlException.getErrorCode() == 1045) {
+                    boolean result = getDatabaseCredential(connectionConfig);
+                    if (result) {
+                        this.doOKAction();
+                        return;
+                    }
+                }
+            }
             return;
         }
 
         if (overrideBox.getSelectedObjects() != null) {
-            int confirm = Messages.showOkCancelDialog(project, "The exists file will be overwrite ,Confirm start generate?", "Mybatis Generator Plus", Messages.getQuestionIcon());
+            int confirm = Messages.showOkCancelDialog(project, "The exists file will be overwrite ,Confirm generate?", "Mybatis Generator Plus", Messages.getQuestionIcon());
             if (confirm == 2) {
                 return;
             }
