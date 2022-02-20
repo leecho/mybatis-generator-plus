@@ -39,9 +39,6 @@ public class MainAction extends AnAction {
 		}
 		GenerateSettingUI ui = new GenerateSettingUI(e);
 		ui.show();
-		/*if (ui.showAndGet()) {
-			ui.generate();
-		}*/
 	}
 
 }

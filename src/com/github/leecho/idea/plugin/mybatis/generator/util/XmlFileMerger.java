@@ -14,7 +14,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.sun.org.apache.xerces.internal.dom.DeferredTextImpl;
+//import com.sun.org.apache.xerces.internal.dom.DeferredTextImpl;
+import org.apache.xerces.dom.DeferredTextImpl;
 import org.mybatis.generator.api.GeneratedXmlFile;
 import org.mybatis.generator.config.MergeConstants;
 import org.mybatis.generator.exception.ShellException;

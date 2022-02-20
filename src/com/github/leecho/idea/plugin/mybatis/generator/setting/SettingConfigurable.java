@@ -1,10 +1,9 @@
 package com.github.leecho.idea.plugin.mybatis.generator.setting;
 
 import com.github.leecho.idea.plugin.mybatis.generator.ui.GeneratorSettingUI;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
-import com.sun.istack.internal.NotNull;
+import com.sun.istack.NotNull;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +27,7 @@ public class SettingConfigurable implements SearchableConfigurable {
     @Nls
     @Override
     public String getDisplayName() {
-        return "Mybatis Generator Plus Plus";
+        return "Mybatis Generator Plus";
     }
 
     @Nullable

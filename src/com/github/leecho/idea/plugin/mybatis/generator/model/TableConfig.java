@@ -29,14 +29,19 @@ public class TableConfig {
 	private String domainName;
 
 	/**
-	 * dao名称
+	 * mapper名称
 	 */
 	private String mapperName;
 
 	/**
-	 * dao名称
+	 * example名称
 	 */
 	private String exampleName;
+
+	/**
+	 * domain后缀
+	 */
+	private String domainPostfix;
 
 	/**
 	 * dao后缀
@@ -58,12 +63,11 @@ public class TableConfig {
 
 	private String basePackage;
 	private String domainPackage;
-
 	private String mapperPackage;
-
 	private String examplePackage;
-
 	private String xmlPackage;
+	// mybatis generator runtime
+	private String mgbTargetRuntime;
 
 	private Map<String, ColumnSetting> columnSettings = new HashMap<>();
 	/**
@@ -436,5 +440,21 @@ public class TableConfig {
 
 	public void setColumnSettings(Map<String, ColumnSetting> columnSettings) {
 		this.columnSettings = columnSettings;
+	}
+
+	public String getDomainPostfix() {
+		return domainPostfix;
+	}
+
+	public void setDomainPostfix(String domainPostfix) {
+		this.domainPostfix = domainPostfix;
+	}
+
+	public String getMgbTargetRuntime() {
+		return mgbTargetRuntime;
+	}
+
+	public void setMgbTargetRuntime(String mgbTargetRuntime) {
+		this.mgbTargetRuntime = mgbTargetRuntime;
 	}
 }

@@ -2,16 +2,13 @@ package com.github.leecho.idea.plugin.mybatis.generator.model;
 
 public class GlobalConfig {
 
-	private String moduleRootPath;
 	private String sourcePath;
 	private String resourcePath;
+	private String defaultXmlPackage;
+
+	private String domainPostfix;
 	private String mapperPostfix;
 	private String examplePostfix;
-
-	private String domainPackage;
-	private String mapperPackage;
-	private String examplePackage;
-	private String xmlPackage;
 
 	private String tablePrefix;
 
@@ -79,10 +76,6 @@ public class GlobalConfig {
 	 * 是否使用Example
 	 */
 	private boolean useExample;
-	/**
-	 * 是否是mysql8数据库
-	 */
-	private boolean mysql8;
 
 	private boolean lombokAnnotation;
 
@@ -114,29 +107,6 @@ public class GlobalConfig {
 		this.mapperPostfix = mapperPostfix;
 	}
 
-	public String getDomainPackage() {
-		return domainPackage;
-	}
-
-	public void setDomainPackage(String domainPackage) {
-		this.domainPackage = domainPackage;
-	}
-
-	public String getMapperPackage() {
-		return mapperPackage;
-	}
-
-	public void setMapperPackage(String mapperPackage) {
-		this.mapperPackage = mapperPackage;
-	}
-
-	public String getXmlPackage() {
-		return xmlPackage;
-	}
-
-	public void setXmlPackage(String xmlPackage) {
-		this.xmlPackage = xmlPackage;
-	}
 
 	public boolean isOffsetLimit() {
 		return offsetLimit;
@@ -242,14 +212,6 @@ public class GlobalConfig {
 		this.useExample = useExample;
 	}
 
-	public boolean isMysql8() {
-		return mysql8;
-	}
-
-	public void setMysql8(boolean mysql8) {
-		this.mysql8 = mysql8;
-	}
-
 	public boolean isLombokAnnotation() {
 		return lombokAnnotation;
 	}
@@ -266,28 +228,12 @@ public class GlobalConfig {
 		this.lombokBuilderAnnotation = lombokBuilderAnnotation;
 	}
 
-	public String getModuleRootPath() {
-		return moduleRootPath;
-	}
-
-	public void setModuleRootPath(String moduleRootPath) {
-		this.moduleRootPath = moduleRootPath;
-	}
-
 	public String getExamplePostfix() {
 		return examplePostfix;
 	}
 
 	public void setExamplePostfix(String examplePostfix) {
 		this.examplePostfix = examplePostfix;
-	}
-
-	public String getExamplePackage() {
-		return examplePackage;
-	}
-
-	public void setExamplePackage(String examplePackage) {
-		this.examplePackage = examplePackage;
 	}
 
 	public boolean isSwaggerAnnotation() {
@@ -306,15 +252,32 @@ public class GlobalConfig {
 		this.tablePrefix = tablePrefix;
 	}
 
+	public String getDomainPostfix() {
+		return domainPostfix;
+	}
+
+	public void setDomainPostfix(String domainPostfix) {
+		this.domainPostfix = domainPostfix;
+	}
+
+	public String getDefaultXmlPackage() {
+		return defaultXmlPackage;
+	}
+
+	public void setDefaultXmlPackage(String defaultXmlPackage) {
+		this.defaultXmlPackage = defaultXmlPackage;
+	}
+
 	public static GlobalConfig getDefault() {
 		GlobalConfig globalConfig = new GlobalConfig();
 		globalConfig.setSourcePath("src/main/java");
 		globalConfig.setResourcePath("src/main/resources");
+		globalConfig.setDomainPostfix("Entity");
 		globalConfig.setMapperPostfix("Mapper");
-		globalConfig.setXmlPackage("mapper");
 		globalConfig.setExamplePostfix("Example");
 		globalConfig.setUseExample(true);
 		globalConfig.setComment(true);
+		globalConfig.setDefaultXmlPackage("mybatis.mapper");
 		return globalConfig;
 	}
 }

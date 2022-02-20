@@ -1,10 +1,8 @@
 package com.github.leecho.idea.plugin.mybatis.generator.generate;
 
 import cn.kt.DbRemarksCommentGenerator;
+import com.github.leecho.idea.plugin.mybatis.generator.model.ConnectionConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
-import com.intellij.credentialStore.CredentialAttributes;
-import com.intellij.database.model.RawConnectionConfig;
-import com.intellij.ide.passwordSafe.PasswordSafe;
 import com.intellij.notification.*;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -22,6 +20,7 @@ import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
 import com.github.leecho.idea.plugin.mybatis.generator.model.DbType;
 import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration;
 import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
+import java.nio.charset.StandardCharsets;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.config.*;
 import org.mybatis.generator.internal.DefaultShellCallback;
@@ -60,7 +59,7 @@ public class MyBatisGenerateCommand {
 	 * @param connectionConfig
 	 * @throws Exception
 	 */
-	public void execute(Project project, RawConnectionConfig connectionConfig) {
+	public void execute(Project project, ConnectionConfig connectionConfig) {
 		this.myBatisGeneratorConfiguration = MyBatisGeneratorConfiguration.getInstance(project);
 
 		saveConfig();//执行前 先保存一份当前配置
@@ -91,8 +90,8 @@ public class MyBatisGenerateCommand {
 		context.addProperty("beginningDelimiter", "`");
 		context.addProperty("endingDelimiter", "`");
 		context.addProperty("javaFileEncoding", "UTF-8");
-		context.addProperty(PropertyRegistry.CONTEXT_JAVA_FILE_ENCODING, "UTF-8");
-		context.setTargetRuntime("MyBatis3");
+		context.addProperty(PropertyRegistry.CONTEXT_JAVA_FILE_ENCODING, StandardCharsets.UTF_8.name());
+		context.setTargetRuntime(tableConfig.getMgbTargetRuntime());
 
 		JDBCConnectionConfiguration jdbcConfig = buildJdbcConfig();
 		if (jdbcConfig == null) {
@@ -146,10 +145,10 @@ public class MyBatisGenerateCommand {
 						NotificationGroup balloonNotifications = new NotificationGroup("Mybatis Generator Plus", NotificationDisplayType.STICKY_BALLOON, true);
 
 						List<String> result = myBatisCodeGenerator.getGeneratedJavaFiles().stream()
-								.map(generatedJavaFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project), MyBatisGenerateCommand.this.tableConfig.getSourcePath(), generatedJavaFile.getTargetPackage().replace(".", "/"), generatedJavaFile.getFileName(), generatedJavaFile.getFileName()))
+								.map(generatedJavaFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project), MyBatisGenerateCommand.this.tableConfig.getSourcePath(), generatedJavaFile.getTargetPackage().replace(".", File.separator), generatedJavaFile.getFileName(), generatedJavaFile.getFileName()))
 								.collect(Collectors.toList());
 						result.addAll(myBatisCodeGenerator.getGeneratedXmlFiles().stream()
-								.map(generatedXmlFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project).replace(project.getBasePath() + "/", ""), MyBatisGenerateCommand.this.tableConfig.getResourcePath(), generatedXmlFile.getTargetPackage().replace(".", "/"), generatedXmlFile.getFileName(), generatedXmlFile.getFileName()))
+								.map(generatedXmlFile -> String.format("<a href=\"%s%s/%s/%s\" target=\"_blank\">%s</a>", getRelativePath(project).replace(project.getBasePath() + File.separator, ""), MyBatisGenerateCommand.this.tableConfig.getResourcePath(), generatedXmlFile.getTargetPackage().replace(".", File.separator), generatedXmlFile.getFileName(), generatedXmlFile.getFileName()))
 								.collect(Collectors.toList()));
 						Notification notification = balloonNotifications.createNotification("Generate Successfully", "<html>" + String.join("<br/>", result) + "</html>", NotificationType.INFORMATION, (notification1, hyperlinkEvent) -> {
 							if (hyperlinkEvent.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
@@ -160,7 +159,7 @@ public class MyBatisGenerateCommand {
 					} catch (Exception e) {
 						e.printStackTrace();
 						balloon.hide();
-						Notification notification = new Notification("Mybatis Generator Plus", null, NotificationType.ERROR);
+						Notification notification = new Notification("Mybatis Generator Plus", "", NotificationType.ERROR);
 						notification.setTitle("Generate Failed");
 						notification.setContent("Cause:" + e.getMessage());
 						Notifications.Bus.notify(notification);
@@ -181,7 +180,7 @@ public class MyBatisGenerateCommand {
 		if (tableConfig.getModuleRootPath().equals(project.getBasePath())) {
 			return "";
 		} else {
-			return tableConfig.getModuleRootPath().replace(project.getBasePath() + "/", "") + "/";
+			return tableConfig.getModuleRootPath().replace(project.getBasePath() + File.separator, "") + File.separator;
 		}
 	}
 
@@ -194,8 +193,8 @@ public class MyBatisGenerateCommand {
 	private void createFolderForNeed(TableConfig tableConfig) {
 
 
-		String sourcePath = tableConfig.getModuleRootPath() + "/" + tableConfig.getSourcePath() + "/";
-		String resourcePath = tableConfig.getModuleRootPath() + "/" + tableConfig.getResourcePath() + "/";
+		String sourcePath = tableConfig.getModuleRootPath() + File.separator + tableConfig.getSourcePath() + File.separator;
+		String resourcePath = tableConfig.getModuleRootPath() + File.separator + tableConfig.getResourcePath() + File.separator;
 
 		File sourceFile = new File(sourcePath);
 		if (!sourceFile.exists() && !sourceFile.isDirectory()) {
@@ -217,15 +216,8 @@ public class MyBatisGenerateCommand {
 		if (historyConfigList == null) {
 			historyConfigList = new HashMap<>();
 		}
-
-		String daoName = tableConfig.getMapperName();
-		String modelName = tableConfig.getDomainName();
-		String daoPostfix = daoName.replace(modelName, "");
-		tableConfig.setMapperPostfix(daoPostfix);
-
 		historyConfigList.put(tableConfig.getName(), tableConfig);
 		myBatisGeneratorConfiguration.setTableConfigs(historyConfigList);
-
 	}
 
 	/**
@@ -246,11 +238,9 @@ public class MyBatisGenerateCommand {
 
 		username = credential.getUsername();
 
-		CredentialAttributes credentialAttributes = new CredentialAttributes("mybatis-generator-" + url, username, this.getClass(), false);
-		String password = PasswordSafe.getInstance().getPassword(credentialAttributes);
 
 		jdbcConfig.setUserId(username);
-		jdbcConfig.setPassword(password);
+		jdbcConfig.setPassword(credential.getPwd());
 
 		Boolean mySQL_8 = tableConfig.isMysql8();
 		if (mySQL_8) {
@@ -263,11 +253,6 @@ public class MyBatisGenerateCommand {
 		jdbcConfig.setDriverClass(driverClass);
 		jdbcConfig.setConnectionURL(url);
 		return jdbcConfig;
-		/*} else {
-			DatabaseCredentialUI databaseCredentialUI = new DatabaseCredentialUI(driverClass, url, anActionEvent, tableConfig);
-			return null;
-		}*/
-
 	}
 
 	/**
@@ -283,7 +268,7 @@ public class MyBatisGenerateCommand {
 
 		String schema;
 		if (databaseType.equals(DbType.MySQL.name())) {
-			String[] name_split = url.split("/");
+			String[] name_split = url.split(File.separator);
 			schema = name_split[name_split.length - 1];
 			tableConfig.setSchema(schema);
 		} else if (databaseType.equals(DbType.Oracle.name())) {
@@ -291,7 +276,7 @@ public class MyBatisGenerateCommand {
 			schema = name_split[name_split.length - 1];
 			tableConfig.setCatalog(schema);
 		} else {
-			String[] name_split = url.split("/");
+			String[] name_split = url.split(File.separator);
 			schema = name_split[name_split.length - 1];
 			tableConfig.setCatalog(schema);
 		}
@@ -366,17 +351,17 @@ public class MyBatisGenerateCommand {
 	 */
 	private JavaModelGeneratorConfiguration buildModelConfig() {
 		String projectFolder = tableConfig.getModuleRootPath();
-		String entityPackage = tableConfig.getDomainPackage();
+		String modelPackage = tableConfig.getDomainPackage();
 		String sourcePath = tableConfig.getSourcePath();
 
 		JavaModelGeneratorConfiguration modelConfig = new JavaModelGeneratorConfiguration();
 
-		if (!StringUtils.isEmpty(entityPackage)) {
-			modelConfig.setTargetPackage(entityPackage);
+		if (!StringUtils.isEmpty(modelPackage)) {
+			modelConfig.setTargetPackage(modelPackage);
 		} else {
 			modelConfig.setTargetPackage("");
 		}
-		modelConfig.setTargetProject(projectFolder + "/" + sourcePath + "/");
+		modelConfig.setTargetProject(projectFolder + File.separator + sourcePath + File.separator);
 		return modelConfig;
 	}
 
@@ -399,7 +384,7 @@ public class MyBatisGenerateCommand {
 			mapperConfig.setTargetPackage("");
 		}
 
-		mapperConfig.setTargetProject(projectFolder + "/" + resourcePath + "/");
+		mapperConfig.setTargetProject(projectFolder + File.separator + resourcePath + File.separator);
 
 		//14
 		if (tableConfig.isOverride()) {
@@ -434,7 +419,7 @@ public class MyBatisGenerateCommand {
 			mapperConfig.setTargetPackage("");
 		}
 
-		mapperConfig.setTargetProject(projectFolder + "/" + mapperPath + "/");
+		mapperConfig.setTargetProject(projectFolder + File.separator + mapperPath + File.separator);
 
 		return mapperConfig;
 	}
@@ -574,10 +559,10 @@ public class MyBatisGenerateCommand {
 		StringBuilder sb = new StringBuilder();
 		String mappingXMLPackage = tableConfig.getXmlPackage();
 		String xmlMvnPath = tableConfig.getResourcePath();
-		sb.append(tableConfig.getModuleRootPath() + "/" + xmlMvnPath + "/");
+		sb.append(tableConfig.getModuleRootPath() + File.separator + xmlMvnPath + File.separator);
 
 		if (!StringUtils.isEmpty(mappingXMLPackage)) {
-			sb.append(mappingXMLPackage.replace(".", "/")).append("/");
+			sb.append(mappingXMLPackage.replace(".", File.separator)).append(File.separator);
 		}
 		if (!StringUtils.isEmpty(tableConfig.getMapperName())) {
 			sb.append(tableConfig.getMapperName()).append(".xml");

@@ -30,6 +30,7 @@ public class GenerateCallback implements ProgressCallback {
 	@Override
 	public void startTask(String s) {
 		System.out.println("Start Task: " + s);
+		indicator.setIndeterminate(false);
 		indicator.setText(s);
 		indicator.setFraction(indicator.getFraction() + 0.1);
 	}

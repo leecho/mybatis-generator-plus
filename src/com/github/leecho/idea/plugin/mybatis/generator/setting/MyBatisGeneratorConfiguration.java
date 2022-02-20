@@ -2,6 +2,7 @@ package com.github.leecho.idea.plugin.mybatis.generator.setting;
 
 import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.Credential;
+import com.intellij.openapi.components.ComponentManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
@@ -26,7 +27,7 @@ public class MyBatisGeneratorConfiguration implements PersistentStateComponent<M
 
 	@Nullable
 	public static MyBatisGeneratorConfiguration getInstance(Project project) {
-		return ServiceManager.getService(project, MyBatisGeneratorConfiguration.class);
+		return project.getService(MyBatisGeneratorConfiguration.class);
 	}
 
 	@Override
