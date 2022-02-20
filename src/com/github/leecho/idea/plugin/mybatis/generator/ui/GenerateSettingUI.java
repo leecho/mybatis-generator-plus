@@ -592,10 +592,18 @@ public class GenerateSettingUI extends DialogWrapper {
                 }
                 switch (packageType) {
                     case BASE:
-                        domainPackageField.setText(packagePath + ".entity");
-                        mapperPackageField.setText(packagePath + ".mapper");
-                        if (examplePackageField.isVisible()) {
-                            examplePackageField.setText(packagePath + ".example");
+                        if (org.apache.commons.lang3.StringUtils.isBlank(packagePath)) {
+                            domainPackageField.setText("entity");
+                            mapperPackageField.setText("mapper");
+                            if (examplePackageField.isVisible()) {
+                                examplePackageField.setText("example");
+                            }
+                        }else {
+                            domainPackageField.setText(packagePath + ".entity");
+                            mapperPackageField.setText(packagePath + ".mapper");
+                            if (examplePackageField.isVisible()) {
+                                examplePackageField.setText(packagePath + ".example");
+                            }
                         }
                         xmlPackageField.setText(tableConfig.getXmlPackage());
                         basePackageInitialPath = choosedAbsolutePath;
