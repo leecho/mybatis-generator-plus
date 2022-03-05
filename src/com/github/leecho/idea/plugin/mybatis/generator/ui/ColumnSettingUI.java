@@ -11,7 +11,6 @@ import org.jdesktop.swingx.JXTable;
 import org.jetbrains.annotations.Nullable;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl;
-import org.mybatis.generator.internal.types.JdbcTypeNameTranslator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
  * @version 1.0.0
  * @since 2018/07/17 13:10
  */
+@Deprecated
 public class ColumnSettingUI extends DialogWrapper {
 	/**
 	 * 主面板
@@ -92,7 +92,7 @@ public class ColumnSettingUI extends DialogWrapper {
 			} else if ("INT".equals(typeName)) {
 				introspectedColumn.setJdbcType(Types.INTEGER);
 			} else {
-				introspectedColumn.setJdbcType(JdbcTypeNameTranslator.getJdbcType(typeName));
+				introspectedColumn.setJdbcTypeName(typeName);
 			}
 			introspectedColumn.setLength(dasColumn.getDataType().getLength());
 			introspectedColumn.setScale(dasColumn.getDataType().getScale());

@@ -40,7 +40,6 @@ public class DatabaseCredentialUI extends DialogWrapper {
 		usernamePanel.setLayout(new BoxLayout(usernamePanel, BoxLayout.X_AXIS));
 		usernamePanel.setBorder(JBUI.Borders.empty(1));
 		JLabel usernameLabel = new JLabel("Username:");
-		usernameLabel.setPreferredSize(new Dimension(50, 25));
 		usernamePanel.add(usernameLabel);
 		usernamePanel.add(usernameField);
 		contentPanel.add(usernamePanel);
@@ -49,7 +48,6 @@ public class DatabaseCredentialUI extends DialogWrapper {
 		passwordPanel.setLayout(new BoxLayout(passwordPanel, BoxLayout.X_AXIS));
 		passwordPanel.setBorder(JBUI.Borders.empty(1));
 		JLabel passwordLabel = new JLabel("Password:");
-		passwordLabel.setPreferredSize(new Dimension(50, 25));
 		passwordPanel.add(passwordLabel);
 		passwordPanel.add(passwordField);
 		contentPanel.add(passwordPanel);

@@ -1,8 +1,8 @@
 package com.github.leecho.idea.plugin.mybatis.generator.generate;
 
-import cn.kt.DbRemarksCommentGenerator;
 import com.github.leecho.idea.plugin.mybatis.generator.model.ConnectionConfig;
 import com.github.leecho.idea.plugin.mybatis.generator.model.TableConfig;
+import com.github.leecho.idea.plugin.mybatis.generator.plugin.DbRemarksCommentGenerator;
 import com.intellij.notification.*;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -21,6 +21,7 @@ import com.github.leecho.idea.plugin.mybatis.generator.model.DbType;
 import com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration;
 import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
 import java.nio.charset.StandardCharsets;
+import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.config.*;
 import org.mybatis.generator.internal.DefaultShellCallback;
@@ -86,10 +87,9 @@ public class MyBatisGenerateCommand {
 		configuration.addContext(context);
 
 		context.setId("myid");
-		context.addProperty("autoDelimitKeywords", "true");
-		context.addProperty("beginningDelimiter", "`");
-		context.addProperty("endingDelimiter", "`");
-		context.addProperty("javaFileEncoding", "UTF-8");
+		context.addProperty(PropertyRegistry.CONTEXT_AUTO_DELIMIT_KEYWORDS, "true");
+		context.addProperty(PropertyRegistry.CONTEXT_BEGINNING_DELIMITER, "`");
+		context.addProperty(PropertyRegistry.CONTEXT_ENDING_DELIMITER, "`");
 		context.addProperty(PropertyRegistry.CONTEXT_JAVA_FILE_ENCODING, StandardCharsets.UTF_8.name());
 		context.setTargetRuntime(tableConfig.getMgbTargetRuntime());
 
@@ -114,17 +114,12 @@ public class MyBatisGenerateCommand {
 		createFolderForNeed(this.tableConfig);
 		List<String> warnings = new ArrayList<>();
 		// override=true
-		ShellCallback shellCallback;
-		if (this.tableConfig.isOverride()) {
-			shellCallback = new DefaultShellCallback(true);
-		} else {
-			shellCallback = new MergeableShellCallback(true);
-		}
+		ShellCallback shellCallback= new DefaultShellCallback(this.tableConfig.isOverride());
 		Set<String> fullyQualifiedTables = new HashSet<>();
 		Set<String> contexts = new HashSet<>();
 
 		try {
-			MyBatisCodeGenerator myBatisCodeGenerator = new MyBatisCodeGenerator(configuration, shellCallback, warnings);
+			MyBatisGenerator myBatisCodeGenerator = new MyBatisGenerator(configuration, shellCallback, warnings);
 			StatusBar statusBar = WindowManager.getInstance().getStatusBar(project);
 			Balloon balloon = JBPopupFactory.getInstance()
 					.createHtmlTextBalloonBuilder("Generating Code...", MessageType.INFO, null)
@@ -233,7 +228,6 @@ public class MyBatisGenerateCommand {
 		jdbcConfig.addProperty("useInformationSchema","true");
 
 		Map<String, Credential> users = myBatisGeneratorConfiguration.getCredentials();
-		//if (users != null && users.containsKey(url)) {
 		Credential credential = users.get(url);
 
 		username = credential.getUsername();
@@ -314,7 +308,7 @@ public class MyBatisGenerateCommand {
 			});
 		}
 
-		if ("org.postgresql.Driver".equals(driverClass)) {
+		if (DbType.PostgreSQL.getDriverClass().equals(driverClass)) {
 			tableConfig.setDelimitIdentifiers(true);
 		}
 
@@ -329,11 +323,11 @@ public class MyBatisGenerateCommand {
 				//当使用SelectKey时，Mybatis会使用SelectKeyGenerator，INSERT之后，多发送一次查询语句，获得主键值
 				//在上述读写分离被代理的情况下，会得不到正确的主键
 			}
-			tableConfig.setGeneratedKey(new GeneratedKey(this.tableConfig.getPrimaryKey(), dbType, true, null));
+			tableConfig.setGeneratedKey(new GeneratedKey(this.tableConfig.getPrimaryKey(), dbType, true, "post"));
 		}
 
 		if (this.tableConfig.isUseActualColumnNames()) {
-			tableConfig.addProperty("useActualColumnNames", "true");
+			tableConfig.addProperty(PropertyRegistry.TABLE_USE_ACTUAL_COLUMN_NAMES, "true");
 		}
 
 		if (this.tableConfig.isUseTableNameAlias()) {
@@ -386,15 +380,6 @@ public class MyBatisGenerateCommand {
 
 		mapperConfig.setTargetProject(projectFolder + File.separator + resourcePath + File.separator);
 
-		//14
-		if (tableConfig.isOverride()) {
-			String mappingXMLFilePath = getMappingXMLFilePath(tableConfig);
-			File mappingXMLFile = new File(mappingXMLFilePath);
-			if (mappingXMLFile.exists()) {
-				mappingXMLFile.delete();
-			}
-		}
-
 		return mapperConfig;
 	}
 
@@ -410,7 +395,7 @@ public class MyBatisGenerateCommand {
 		String mapperPath = tableConfig.getSourcePath();
 
 		JavaClientGeneratorConfiguration mapperConfig = new JavaClientGeneratorConfiguration();
-		mapperConfig.setConfigurationType("XMLMAPPER");
+		mapperConfig.setConfigurationType(tableConfig.getMgbJavaClientConfigType());
 		mapperConfig.setTargetPackage(mapperPackage);
 
 		if (!StringUtils.isEmpty(mapperPackage)) {
@@ -431,10 +416,9 @@ public class MyBatisGenerateCommand {
 	 */
 	private CommentGeneratorConfiguration buildCommentConfig() {
 		CommentGeneratorConfiguration commentConfig = new CommentGeneratorConfiguration();
-		commentConfig.setConfigurationType(DbRemarksCommentGenerator.class.getName());
-
 		if (tableConfig.isComment()) {
-			commentConfig.addProperty("columnRemarks", "true");
+			commentConfig.addProperty(PropertyRegistry.COMMENT_GENERATOR_ADD_REMARK_COMMENTS, "true");
+			commentConfig.addProperty(PropertyRegistry.COMMENT_GENERATOR_DATE_FORMAT, "yyyy-MM-dd HH:mm:ss");
 		}
 		if (tableConfig.isAnnotation()) {
 			commentConfig.addProperty("annotations", "true");
@@ -480,12 +464,6 @@ public class MyBatisGenerateCommand {
 			}
 			context.addPluginConfiguration(lombokPlugin);
 		}
-		if (tableConfig.isSwaggerAnnotation()) {
-			PluginConfiguration swaggerPlugin = new PluginConfiguration();
-			swaggerPlugin.addProperty("type", "com.github.leecho.idea.plugin.mybatis.generator.plugin.SwaggerPlugin");
-			swaggerPlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.SwaggerPlugin");
-			context.addPluginConfiguration(swaggerPlugin);
-		}
 
 		if (tableConfig.isUseExample()) {
 			PluginConfiguration renameExamplePlugin = new PluginConfiguration();
@@ -495,43 +473,22 @@ public class MyBatisGenerateCommand {
 			context.addPluginConfiguration(renameExamplePlugin);
 		}
 
-
-		// limit/offset插件
-		if (tableConfig.isOffsetLimit()) {
-			if (DbType.MySQL.name().equals(databaseType)
-					|| DbType.PostgreSQL.name().equals(databaseType)) {
-				PluginConfiguration mySQLLimitPlugin = new PluginConfiguration();
-				mySQLLimitPlugin.addProperty("type", "cn.kt.MySQLLimitPlugin");
-				mySQLLimitPlugin.setConfigurationType("cn.kt.MySQLLimitPlugin");
-				context.addPluginConfiguration(mySQLLimitPlugin);
-			}
-		}
-
+		JavaTypeResolverConfiguration javaTypeResolverPlugin = new JavaTypeResolverConfiguration();
+		javaTypeResolverPlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.MyJavaTypeResolverDefaultImpl");
+		javaTypeResolverPlugin.addProperty(PropertyRegistry.TYPE_RESOLVER_FORCE_BIG_DECIMALS,"true");
 		//for JSR310
 		if (tableConfig.isJsr310Support()) {
-			JavaTypeResolverConfiguration javaTypeResolverPlugin = new JavaTypeResolverConfiguration();
-			javaTypeResolverPlugin.setConfigurationType("cn.kt.JavaTypeResolverJsr310Impl");
-			context.setJavaTypeResolverConfiguration(javaTypeResolverPlugin);
+			javaTypeResolverPlugin.addProperty(PropertyRegistry.TYPE_RESOLVER_USE_JSR310_TYPES,"true");
 		}
-
-		//forUpdate 插件
-		if (tableConfig.isNeedForUpdate()) {
-			if (DbType.MySQL.name().equals(databaseType)
-					|| DbType.PostgreSQL.name().equals(databaseType)) {
-				PluginConfiguration mySQLForUpdatePlugin = new PluginConfiguration();
-				mySQLForUpdatePlugin.addProperty("type", "cn.kt.MySQLForUpdatePlugin");
-				mySQLForUpdatePlugin.setConfigurationType("cn.kt.MySQLForUpdatePlugin");
-				context.addPluginConfiguration(mySQLForUpdatePlugin);
-			}
-		}
+		context.setJavaTypeResolverConfiguration(javaTypeResolverPlugin);
 
 		//repository 插件
 		if (tableConfig.isAnnotationDAO()) {
 			if (DbType.MySQL.name().equals(databaseType)
 					|| DbType.PostgreSQL.name().equals(databaseType)) {
 				PluginConfiguration repositoryPlugin = new PluginConfiguration();
-				repositoryPlugin.addProperty("type", "cn.kt.RepositoryPlugin");
-				repositoryPlugin.setConfigurationType("cn.kt.RepositoryPlugin");
+				repositoryPlugin.addProperty("type", "com.github.leecho.idea.plugin.mybatis.generator.plugin.RepositoryPlugin");
+				repositoryPlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.RepositoryPlugin");
 				context.addPluginConfiguration(repositoryPlugin);
 			}
 		}
@@ -541,35 +498,11 @@ public class MyBatisGenerateCommand {
 			if (DbType.MySQL.name().equals(databaseType)
 					|| DbType.PostgreSQL.name().equals(databaseType)) {
 				PluginConfiguration commonDAOInterfacePlugin = new PluginConfiguration();
-				commonDAOInterfacePlugin.addProperty("type", "cn.kt.CommonDAOInterfacePlugin");
-				commonDAOInterfacePlugin.setConfigurationType("cn.kt.CommonDAOInterfacePlugin");
+				commonDAOInterfacePlugin.addProperty("type", "com.github.leecho.idea.plugin.mybatis.generator.plugin.CommonDAOInterfacePlugin");
+				commonDAOInterfacePlugin.setConfigurationType("com.github.leecho.idea.plugin.mybatis.generator.plugin.CommonDAOInterfacePlugin");
 				context.addPluginConfiguration(commonDAOInterfacePlugin);
 			}
 		}
 
-	}
-
-	/**
-	 * 获取xml文件路径 用以删除之前的xml
-	 *
-	 * @param tableConfig
-	 * @return
-	 */
-	private String getMappingXMLFilePath(TableConfig tableConfig) {
-		StringBuilder sb = new StringBuilder();
-		String mappingXMLPackage = tableConfig.getXmlPackage();
-		String xmlMvnPath = tableConfig.getResourcePath();
-		sb.append(tableConfig.getModuleRootPath() + File.separator + xmlMvnPath + File.separator);
-
-		if (!StringUtils.isEmpty(mappingXMLPackage)) {
-			sb.append(mappingXMLPackage.replace(".", File.separator)).append(File.separator);
-		}
-		if (!StringUtils.isEmpty(tableConfig.getMapperName())) {
-			sb.append(tableConfig.getMapperName()).append(".xml");
-		} else {
-			sb.append(tableConfig.getDomainName()).append("Mapper.xml");
-		}
-
-		return sb.toString();
 	}
 }

@@ -1,6 +1,7 @@
 package com.github.leecho.idea.plugin.mybatis.generator.ui;
 
-import com.github.leecho.idea.plugin.mybatis.generator.enums.MgbTargetRuntimeEnum;
+import com.github.leecho.idea.plugin.mybatis.generator.enums.MbgJavaClientConfigTypeEnum;
+import com.github.leecho.idea.plugin.mybatis.generator.enums.MbgTargetRuntimeEnum;
 import com.github.leecho.idea.plugin.mybatis.generator.enums.PackageTypeEnum;
 import com.github.leecho.idea.plugin.mybatis.generator.generate.MyBatisGenerateCommand;
 import com.github.leecho.idea.plugin.mybatis.generator.model.ConnectionConfig;
@@ -15,6 +16,7 @@ import com.github.leecho.idea.plugin.mybatis.generator.util.StringUtils;
 import com.intellij.database.model.NameVersion;
 import com.intellij.database.model.RawConnectionConfig;
 import com.intellij.database.psi.DbDataSource;
+import com.intellij.database.psi.DbNamespace;
 import com.intellij.database.psi.DbTable;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
@@ -32,9 +34,12 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Objects;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -82,13 +87,13 @@ public class GenerateSettingUI extends DialogWrapper {
     private JPanel examplePackagePanel = new JPanel();
     private JPanel exampleNamePanel = new JPanel();
 
-    private JComboBox<String> mgbTargetRuntimeBox = new ComboBox<>();
-    private JCheckBox offsetLimitBox = new JCheckBox("Pageable");
+    private JComboBox<String> mbgTargetRuntimeBox = new ComboBox<>();
+    private JComboBox<String> mbgJavaClientTypeBox = new ComboBox<>();
+
     private JCheckBox commentBox = new JCheckBox("Comment");
     private JCheckBox overrideBox = new JCheckBox("Overwrite");
     private JCheckBox needToStringHashcodeEqualsBox = new JCheckBox("toString/hashCode/equals");
     private JCheckBox useSchemaPrefixBox = new JCheckBox("Use Schema Prefix");
-    private JCheckBox needForUpdateBox = new JCheckBox("Add ForUpdate");
     private JCheckBox annotationDAOBox = new JCheckBox("Repository Annotation");
     private JCheckBox useDAOExtendStyleBox = new JCheckBox("Parent Interface");
     private JCheckBox jsr310SupportBox = new JCheckBox("JSR310: Date and Time API");
@@ -98,7 +103,6 @@ public class GenerateSettingUI extends DialogWrapper {
     private JCheckBox useExampleBox = new JCheckBox("Use Example");
     private JCheckBox lombokAnnotationBox = new JCheckBox("Lombok");
     private JCheckBox lombokBuilderAnnotationBox = new JCheckBox("Lombok Builder");
-    private JCheckBox swaggerAnnotationBox = new JCheckBox("Swagger Model");
     private JBTabbedPane tabpanel = new JBTabbedPane();
     private String basePackageInitialPath;
     private String domainPackageInitialPath;
@@ -145,7 +149,7 @@ public class GenerateSettingUI extends DialogWrapper {
         this.initHeader(tableName, primaryKey);
         this.initGeneralPanel(entityName);
         this.initOptionsPanel();
-        tabpanel.add(new ColumnTablePanel(tableConfig, tableInfo));
+//        tabpanel.add(new ColumnTablePanel(tableConfig, tableInfo));
         contentPane.add(tabpanel);
         tabpanel.setUI(new GenerateSettingTabUI());
         contentPane.setBorder(JBUI.Borders.empty());
@@ -175,24 +179,20 @@ public class GenerateSettingUI extends DialogWrapper {
             tableConfig.setMapperPostfix(globalConfig.getMapperPostfix());
             tableConfig.setExamplePostfix(globalConfig.getExamplePostfix());
             //默认采用 MyBatis3DynamicSql 运行时
-            tableConfig.setMgbTargetRuntime(MgbTargetRuntimeEnum.MY_BATIS3_DYNAMIC_SQL.name());
+            tableConfig.setMgbTargetRuntime(MbgTargetRuntimeEnum.MY_BATIS3_DYNAMIC_SQL.name());
 
-            tableConfig.setOffsetLimit(globalConfig.isOffsetLimit());
             tableConfig.setComment(globalConfig.isComment());
             tableConfig.setOverride(globalConfig.isOverride());
             tableConfig.setNeedToStringHashcodeEquals(globalConfig.isNeedToStringHashcodeEquals());
             tableConfig.setUseSchemaPrefix(globalConfig.isUseSchemaPrefix());
-            tableConfig.setNeedForUpdate(globalConfig.isNeedForUpdate());
             tableConfig.setAnnotationDAO(globalConfig.isAnnotationDAO());
             tableConfig.setUseDAOExtendStyle(globalConfig.isUseDAOExtendStyle());
             tableConfig.setJsr310Support(globalConfig.isJsr310Support());
             tableConfig.setAnnotation(globalConfig.isAnnotation());
             tableConfig.setUseActualColumnNames(globalConfig.isUseActualColumnNames());
-            tableConfig.setUseTableNameAlias(globalConfig.isUseTableNameAlias());
             tableConfig.setUseExample(globalConfig.isUseExample());
             tableConfig.setLombokAnnotation(globalConfig.isLombokAnnotation());
             tableConfig.setLombokBuilderAnnotation(globalConfig.isLombokBuilderAnnotation());
-            tableConfig.setSwaggerAnnotation(globalConfig.isSwaggerAnnotation());
             tableConfig.setPrimaryKey(primaryKey);
         }
     }
@@ -321,22 +321,17 @@ public class GenerateSettingUI extends DialogWrapper {
      * @return
      */
     private ConnectionConfig getRawConnectionConfig() {
-        DbDataSource dbDataSource = null;
-        PsiElement current = psiElements[0];
-        while (current != null) {
-            if (DbDataSource.class.isAssignableFrom(current.getClass())) {
-                dbDataSource = (DbDataSource) current;
-                break;
-            }
-            current = current.getParent();
-        }
+        PsiElement psiElement = psiElements[0];
+        DbDataSource dbDataSource = (DbDataSource) psiElement.getParent().getParent();
+        DbNamespace dbNamespace = (DbNamespace) psiElement.getParent();
+
 
         if (dbDataSource == null) {
             Messages.showMessageDialog(project, "Cannot get datasource", "Mybatis Generator Plus", Messages.getErrorIcon());
             return null;
         }
 
-        String schema = dbDataSource.getModel().getCurrentRootNamespace().getName();
+        String schema = dbNamespace.getName();
         RawConnectionConfig connectionConfig = dbDataSource.getConnectionConfig();
 
         if (connectionConfig == null) {
@@ -360,12 +355,10 @@ public class GenerateSettingUI extends DialogWrapper {
 
     private void initOptionsPanel() {
         JBPanel optionsPanel = new JBPanel(new GridLayout(8, 4, 10, 10));
-        optionsPanel.add(offsetLimitBox);
         optionsPanel.add(commentBox);
         optionsPanel.add(overrideBox);
         optionsPanel.add(needToStringHashcodeEqualsBox);
         optionsPanel.add(useSchemaPrefixBox);
-        optionsPanel.add(needForUpdateBox);
         optionsPanel.add(annotationDAOBox);
         optionsPanel.add(useDAOExtendStyleBox);
         optionsPanel.add(jsr310SupportBox);
@@ -375,19 +368,20 @@ public class GenerateSettingUI extends DialogWrapper {
         optionsPanel.add(useExampleBox);
         optionsPanel.add(lombokAnnotationBox);
         optionsPanel.add(lombokBuilderAnnotationBox);
-        optionsPanel.add(swaggerAnnotationBox);
+
+        useExampleBox.setVisible(mbgJavaClientTypeBox.isVisible());
 
         useExampleBox.addChangeListener(e -> {
-            exampleNamePanel.setVisible(useExampleBox.getSelectedObjects() != null);
-            examplePackagePanel.setVisible(useExampleBox.getSelectedObjects() != null);
+            exampleNamePanel.setVisible(
+                mbgJavaClientTypeBox.isVisible() && useExampleBox.getSelectedObjects() != null);
+            examplePackagePanel.setVisible(
+                mbgJavaClientTypeBox.isVisible() && useExampleBox.getSelectedObjects() != null);
         });
 
-        offsetLimitBox.setSelected(tableConfig.isOffsetLimit());
         commentBox.setSelected(tableConfig.isComment());
         overrideBox.setSelected(tableConfig.isOverride());
         needToStringHashcodeEqualsBox.setSelected(tableConfig.isNeedToStringHashcodeEquals());
         useSchemaPrefixBox.setSelected(tableConfig.isUseSchemaPrefix());
-        needForUpdateBox.setSelected(tableConfig.isNeedForUpdate());
         annotationDAOBox.setSelected(tableConfig.isAnnotationDAO());
         useDAOExtendStyleBox.setSelected(tableConfig.isUseDAOExtendStyle());
         jsr310SupportBox.setSelected(tableConfig.isJsr310Support());
@@ -397,7 +391,6 @@ public class GenerateSettingUI extends DialogWrapper {
         useExampleBox.setSelected(tableConfig.isUseExample());
         lombokAnnotationBox.setSelected(tableConfig.isLombokAnnotation());
         lombokBuilderAnnotationBox.setSelected(tableConfig.isLombokBuilderAnnotation());
-        swaggerAnnotationBox.setSelected(tableConfig.isSwaggerAnnotation());
         optionsPanel.setName("Options");
         tabpanel.add(optionsPanel);
     }
@@ -414,7 +407,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel moduleRootPanel = new JPanel();
         moduleRootPanel.setLayout(new BoxLayout(moduleRootPanel, BoxLayout.X_AXIS));
         JBLabel projectRootLabel = new JBLabel("Module Root:");
-        projectRootLabel.setPreferredSize(new Dimension(150, 10));
+//        projectRootLabel.setPreferredSize(new Dimension(150, 10));
         moduleRootField.addBrowseFolderListener(new TextBrowseFolderListener(
             FileChooserDescriptorFactory.createSingleFolderDescriptor()) {
             @Override
@@ -438,7 +431,7 @@ public class GenerateSettingUI extends DialogWrapper {
         tableNamePanel.setLayout(new BoxLayout(tableNamePanel, BoxLayout.X_AXIS));
         JLabel tableLabel = new JLabel("Table Name:");
         tableLabel.setLabelFor(tableNameField);
-        tableLabel.setPreferredSize(new Dimension(150, 10));
+//        tableLabel.setPreferredSize(new Dimension(150, 10));
         tableNamePanel.add(tableLabel);
         tableNamePanel.add(tableNameField);
 
@@ -462,7 +455,7 @@ public class GenerateSettingUI extends DialogWrapper {
         primaryPanel.setLayout(new BoxLayout(primaryPanel, BoxLayout.X_AXIS));
         JLabel primaryKeyLabel = new JLabel("   Primary Key:");
         primaryKeyLabel.setLabelFor(primaryKeyField);
-        primaryKeyLabel.setPreferredSize(new Dimension(150, 10));
+//        primaryKeyLabel.setPreferredSize(new Dimension(150, 10));
         tableNamePanel.add(primaryKeyLabel);
         tableNamePanel.add(primaryKeyField);
 
@@ -483,7 +476,7 @@ public class GenerateSettingUI extends DialogWrapper {
     }
 
     private void initGeneralPanel(String domainName) {
-        JPanel mgbTargetRuntimePanel = initMgbTargetRuntimePanel();
+        JPanel mgbTargetRuntimePanel = initMbgTargbgetRuntimePanel();
         JPanel domainNamePanel = initDomainNamePanel(domainName);
         JPanel mapperNamePanel = initMapperNamePanel(domainName);
         initExampleNamePanel(domainName);
@@ -500,15 +493,19 @@ public class GenerateSettingUI extends DialogWrapper {
         examplePackagePanel = initPackagePanel("Example Package:",
             Objects.nonNull(tableConfig) ? tableConfig.getExamplePackage() : "",
             examplePackageField, PackageTypeEnum.EXAMPLE);
+        examplePackagePanel.setVisible(
+            mbgJavaClientTypeBox.isVisible() && useExampleBox.getSelectedObjects() != null);
         JPanel xmlPackagePanel = initPackagePanel("Xml Package:",
             Objects.nonNull(tableConfig) ? tableConfig.getXmlPackage() : "", xmlPackageField,
             PackageTypeEnum.XML);
+        xmlPackageField.setVisible(mbgJavaClientTypeBox.isVisible());
+        xmlPackagePanel.setVisible(mbgJavaClientTypeBox.isVisible());
 
         JPanel generalPanel = new JPanel();
         generalPanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
 
-        // ******** Runtime ui  *********
-        generalPanel.add(new TitledSeparator("Runtime"));
+        // ******** Runtime & Type ui  *********
+        generalPanel.add(new TitledSeparator("Runtime And Type"));
         JPanel runtimePanel = new JPanel();
         runtimePanel.setLayout(new VerticalFlowLayout(VerticalFlowLayout.TOP));
         runtimePanel.add(mgbTargetRuntimePanel);
@@ -546,7 +543,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         JBLabel label = new JBLabel(labelText);
-        label.setPreferredSize(new Dimension(150, 10));
+//        label.setPreferredSize(new Dimension(150, 10));
         textFieldWithBrowseButton.setText(historyFieldText);
         textFieldWithBrowseButton.setEditable(true);
         textFieldWithBrowseButton.addBrowseFolderListener(new TextBrowseFolderListener(
@@ -638,7 +635,7 @@ public class GenerateSettingUI extends DialogWrapper {
     private void initExampleNamePanel(String domainName) {
         exampleNamePanel.setLayout(new BoxLayout(exampleNamePanel, BoxLayout.X_AXIS));
         JLabel exampleNameLabel = new JLabel("Example Name:");
-        exampleNameLabel.setPreferredSize(new Dimension(150, 10));
+//        exampleNameLabel.setPreferredSize(new Dimension(150, 10));
         exampleNameLabel.setLabelFor(domainNameField);
         exampleNamePanel.add(exampleNameLabel);
         exampleNamePanel.add(exampleNameField);
@@ -651,7 +648,7 @@ public class GenerateSettingUI extends DialogWrapper {
         } else {
             exampleNameField.setText(getExampleName(domainName));
         }
-        exampleNamePanel.setVisible(tableConfig.isUseExample());
+        exampleNamePanel.setVisible(mbgJavaClientTypeBox.isVisible() && tableConfig.isUseExample());
     }
 
     @NotNull
@@ -660,7 +657,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel mapperNamePanel = new JPanel();
         mapperNamePanel.setLayout(new BoxLayout(mapperNamePanel, BoxLayout.X_AXIS));
         JLabel mapperNameLabel = new JLabel("Mapper Name:");
-        mapperNameLabel.setPreferredSize(new Dimension(150, 10));
+//        mapperNameLabel.setPreferredSize(new Dimension(150, 10));
         mapperNameLabel.setLabelFor(domainNameField);
         mapperNamePanel.add(mapperNameLabel);
         mapperNamePanel.add(mapperNameField);
@@ -682,7 +679,7 @@ public class GenerateSettingUI extends DialogWrapper {
         JPanel domainNamePanel = new JPanel();
         domainNamePanel.setLayout(new BoxLayout(domainNamePanel, BoxLayout.X_AXIS));
         JLabel entityNameLabel = new JLabel("Domain Name:");
-        entityNameLabel.setPreferredSize(new Dimension(150, 10));
+//        entityNameLabel.setPreferredSize(new Dimension(150, 10));
         domainNamePanel.add(entityNameLabel);
         domainNamePanel.add(domainNameField);
         if (psiElements.length > 1) {
@@ -707,18 +704,78 @@ public class GenerateSettingUI extends DialogWrapper {
     }
 
     @NotNull
-    private JPanel initMgbTargetRuntimePanel() {
-        //mgbTargetRuntime
+    private JPanel initMbgTargbgetRuntimePanel() {
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.X_AXIS));
-        JLabel jLabel = new JLabel("Generator Target Runtime:");
-        jLabel.setPreferredSize(new Dimension(230, 10));
-        jPanel.add(jLabel);
-        for (MgbTargetRuntimeEnum value : MgbTargetRuntimeEnum.values()) {
-            mgbTargetRuntimeBox.addItem(value.getName());
+        jPanel.setLayout(new GridLayout(1, 2, 160, 0));
+
+        // mbgTargetRuntime
+        JPanel runtimePanel = new JPanel();
+        runtimePanel.setLayout(new BoxLayout(runtimePanel, BoxLayout.X_AXIS));
+        JLabel runtimeLabel = new JLabel("Target Runtime:");
+        runtimePanel.add(runtimeLabel);
+        for (MbgTargetRuntimeEnum value : MbgTargetRuntimeEnum.values()) {
+            mbgTargetRuntimeBox.addItem(value.getName());
         }
-        mgbTargetRuntimeBox.setSelectedIndex(0);
-        jPanel.add(mgbTargetRuntimeBox);
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(tableConfig.getMgbTargetRuntime())) {
+            mbgTargetRuntimeBox.setSelectedItem(tableConfig.getMgbTargetRuntime());
+        }else {
+            mbgTargetRuntimeBox.setSelectedIndex(0);
+        }
+        mbgTargetRuntimeBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent event) {
+                if (Objects.equals(event.getStateChange(), ItemEvent.SELECTED)) {
+                    // 根据当前选中的runtime 修改可供选择的client type
+                    MbgTargetRuntimeEnum runtimeEnum = MbgTargetRuntimeEnum.getByName(
+                        event.getItem().toString());
+                    List<String> clientTypeList = MbgJavaClientConfigTypeEnum.getValuesByTargetRuntime(
+                        runtimeEnum);
+                    if (CollectionUtils.isNotEmpty(clientTypeList)) {
+                        mbgJavaClientTypeBox.removeAllItems();
+                        for (String type : clientTypeList) {
+                            mbgJavaClientTypeBox.addItem(type);
+                        }
+                        mbgJavaClientTypeBox.getParent().setVisible(true);
+                        mbgJavaClientTypeBox.setVisible(true);
+                    }else {
+                        mbgJavaClientTypeBox.getParent().setVisible(false);
+                        mbgJavaClientTypeBox.setVisible(false);
+                    }
+                    // MyBatis3DynamicSql & MyBatis3Kotlin 模式下没有 example 和 xml
+                    exampleNamePanel.setVisible(mbgJavaClientTypeBox.isVisible());
+                    examplePackagePanel.setVisible(mbgJavaClientTypeBox.isVisible());
+                    xmlPackageField.getParent().setVisible(mbgJavaClientTypeBox.isVisible());
+                    xmlPackageField.setVisible(mbgJavaClientTypeBox.isVisible());
+                    useExampleBox.setVisible(mbgJavaClientTypeBox.isVisible());
+                }
+            }
+        });
+        runtimePanel.add(mbgTargetRuntimeBox);
+        jPanel.add(runtimePanel);
+
+        // java client type
+        JPanel typePanel = new JPanel();
+        typePanel.setLayout(new BoxLayout(typePanel, BoxLayout.X_AXIS));
+        JLabel clientTypeLabel = new JLabel("Client Type:");
+        typePanel.add(clientTypeLabel);
+        List<String> typeList = MbgJavaClientConfigTypeEnum.getValuesByTargetRuntime(
+            MbgTargetRuntimeEnum.getByName(mbgTargetRuntimeBox.getSelectedItem().toString()));
+        if (CollectionUtils.isNotEmpty(typeList)) {
+            for (String type : typeList) {
+                mbgJavaClientTypeBox.addItem(type);
+            }
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(tableConfig.getMgbJavaClientConfigType())) {
+                mbgJavaClientTypeBox.setSelectedItem(tableConfig.getMgbJavaClientConfigType());
+            }else {
+                mbgJavaClientTypeBox.setSelectedIndex(0);
+            }
+        }else {
+            typePanel.setVisible(false);
+            mbgJavaClientTypeBox.setVisible(false);
+        }
+        typePanel.add(mbgJavaClientTypeBox);
+        jPanel.add(typePanel);
+
         return jPanel;
     }
 
@@ -738,13 +795,13 @@ public class GenerateSettingUI extends DialogWrapper {
         tableConfig.setPrimaryKey(primaryKeyField.getText());
         tableConfig.setExampleName(exampleNameField.getText());
 
-        tableConfig.setMgbTargetRuntime((String) mgbTargetRuntimeBox.getSelectedItem());
-        tableConfig.setOffsetLimit(offsetLimitBox.getSelectedObjects() != null);
+        tableConfig.setMgbTargetRuntime((String) mbgTargetRuntimeBox.getSelectedItem());
+        tableConfig.setMgbJavaClientConfigType((String) mbgJavaClientTypeBox.getSelectedItem());
+
         tableConfig.setComment(commentBox.getSelectedObjects() != null);
         tableConfig.setOverride(overrideBox.getSelectedObjects() != null);
         tableConfig.setNeedToStringHashcodeEquals(needToStringHashcodeEqualsBox.getSelectedObjects() != null);
         tableConfig.setUseSchemaPrefix(useSchemaPrefixBox.getSelectedObjects() != null);
-        tableConfig.setNeedForUpdate(needForUpdateBox.getSelectedObjects() != null);
         tableConfig.setAnnotationDAO(annotationDAOBox.getSelectedObjects() != null);
         tableConfig.setUseDAOExtendStyle(useDAOExtendStyleBox.getSelectedObjects() != null);
         tableConfig.setJsr310Support(jsr310SupportBox.getSelectedObjects() != null);
@@ -755,7 +812,6 @@ public class GenerateSettingUI extends DialogWrapper {
         tableConfig.setMysql8(connectionConfig.isMysql8());
         tableConfig.setLombokAnnotation(lombokAnnotationBox.getSelectedObjects() != null);
         tableConfig.setLombokBuilderAnnotation(lombokBuilderAnnotationBox.getSelectedObjects() != null);
-        tableConfig.setSwaggerAnnotation(swaggerAnnotationBox.getSelectedObjects() != null);
         tableConfig.setSourcePath(this.tableConfig.getSourcePath());
         tableConfig.setResourcePath(this.tableConfig.getResourcePath());
 

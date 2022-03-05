@@ -1,5 +1,6 @@
 package com.github.leecho.idea.plugin.mybatis.generator.model;
 
+import com.github.leecho.idea.plugin.mybatis.generator.enums.MbgTargetRuntimeEnum;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,453 +9,430 @@ import java.util.Map;
  */
 public class TableConfig {
 
-	/**
-	 * 配置名称
-	 */
-	private String name;
-
-	/**
-	 * 表名
-	 */
-	private String tableName;
-
-	/**
-	 * 主键
-	 */
-	private String primaryKey;
-
-	/**
-	 * 实体名
-	 */
-	private String domainName;
-
-	/**
-	 * mapper名称
-	 */
-	private String mapperName;
-
-	/**
-	 * example名称
-	 */
-	private String exampleName;
-
-	/**
-	 * domain后缀
-	 */
-	private String domainPostfix;
-
-	/**
-	 * dao后缀
-	 */
-	private String mapperPostfix;
-
-	/**
-	 * dao后缀
-	 */
-	private String examplePostfix;
-
-	/**
-	 * 工程目录
-	 */
-	private String moduleRootPath;
-
-	private String sourcePath;
-	private String resourcePath;
-
-	private String basePackage;
-	private String domainPackage;
-	private String mapperPackage;
-	private String examplePackage;
-	private String xmlPackage;
-	// mybatis generator runtime
-	private String mgbTargetRuntime;
-
-	private Map<String, ColumnSetting> columnSettings = new HashMap<>();
-	/**
-	 * 是否分页
-	 */
-	private boolean offsetLimit;
-
-	/**
-	 * 是否生成实体注释（来自表）
-	 */
-	private boolean comment;
-
-	/**
-	 * 是否覆盖原xml
-	 */
-	private boolean override;
-
-	/**
-	 * 是否生成toString/hashCode/equals方法
-	 */
-	private boolean needToStringHashcodeEquals;
-
-	/**
-	 * 是否使用Schema前缀
-	 */
-	private boolean useSchemaPrefix;
-
-	/**
-	 * 是否select 增加ForUpdate
-	 */
-	private boolean needForUpdate;
-
-	/**
-	 * 是否DAO使用 @Repository 注解
-	 */
-	private boolean annotationDAO;
-
-	/**
-	 * 是否DAO方法抽出到公共父接口
-	 */
-	private boolean useDAOExtendStyle;
-
-	/**
-	 * 是否JSR310: Date and Time API
-	 */
-	private boolean jsr310Support;
-
-	/**
-	 * 是否生成JPA注解
-	 */
-	private boolean annotation;
-
-	/**
-	 * 是否使用实际的列名
-	 */
-	private boolean useActualColumnNames;
+  /**
+   * 配置名称
+   */
+  private String name;
+
+  /**
+   * 表名
+   */
+  private String tableName;
+
+  /**
+   * 主键
+   */
+  private String primaryKey;
+
+  /**
+   * 实体名
+   */
+  private String domainName;
+
+  /**
+   * mapper名称
+   */
+  private String mapperName;
+
+  /**
+   * example名称
+   */
+  private String exampleName;
+
+  /**
+   * domain后缀
+   */
+  private String domainPostfix;
+
+  /**
+   * dao后缀
+   */
+  private String mapperPostfix;
+
+  /**
+   * dao后缀
+   */
+  private String examplePostfix;
+
+  /**
+   * 工程目录
+   */
+  private String moduleRootPath;
+
+  private String sourcePath;
+  private String resourcePath;
+
+  private String basePackage;
+  private String domainPackage;
+  private String mapperPackage;
+  private String examplePackage;
+  private String xmlPackage;
+  /**
+   * mybatis generator runtime
+   * @see MbgTargetRuntimeEnum
+   */
+  private String mgbTargetRuntime;
+  /**
+   * mybatis generator java client configuration type
+   * @see
+   */
+  private String mgbJavaClientConfigType;
+
+  private Map<String, ColumnSetting> columnSettings = new HashMap<>();
+
+  /**
+   * 是否生成实体注释（来自表）
+   */
+  private boolean comment;
+
+  /**
+   * 是否覆盖原xml
+   */
+  private boolean override;
+
+  /**
+   * 是否生成toString/hashCode/equals方法
+   */
+  private boolean needToStringHashcodeEquals;
+
+  /**
+   * 是否使用Schema前缀
+   */
+  private boolean useSchemaPrefix;
+
+  /**
+   * 是否DAO使用 @Repository 注解
+   */
+  private boolean annotationDAO;
+
+  /**
+   * 是否DAO方法抽出到公共父接口
+   */
+  private boolean useDAOExtendStyle;
+
+  /**
+   * 是否JSR310: Date and Time API
+   */
+  private boolean jsr310Support;
+
+  /**
+   * 是否生成JPA注解
+   */
+  private boolean annotation;
+
+  /**
+   * 是否使用实际的列名
+   */
+  private boolean useActualColumnNames;
+  /**
+   * 是否启用as别名查询
+   */
+  private boolean useTableNameAlias;
+  /**
+   * 是否使用Example
+   */
+  private boolean useExample;
+  /**
+   * 是否是mysql8数据库
+   */
+  private boolean mysql8;
 
-	/**
-	 * 是否启用as别名查询
-	 */
-	private boolean useTableNameAlias;
+  private boolean lombokAnnotation;
+
+  private boolean lombokBuilderAnnotation;
 
-	/**
-	 * 是否使用Example
-	 */
-	private boolean useExample;
-	/**
-	 * 是否是mysql8数据库
-	 */
-	private boolean mysql8;
 
-	private boolean lombokAnnotation;
+  private String encoding;
+  private String connectorJarPath;
 
-	private boolean lombokBuilderAnnotation;
+  public boolean isJsr310Support() {
+    return jsr310Support;
+  }
 
-	private boolean swaggerAnnotation;
+  public void setJsr310Support(boolean jsr310Support) {
+    this.jsr310Support = jsr310Support;
+  }
 
-	private String encoding;
-	private String connectorJarPath;
+  public boolean isUseSchemaPrefix() {
+    return useSchemaPrefix;
+  }
 
-    public boolean isJsr310Support() {
-        return jsr310Support;
-    }
+  public void setUseSchemaPrefix(boolean useSchemaPrefix) {
+    this.useSchemaPrefix = useSchemaPrefix;
+  }
 
-    public void setJsr310Support(boolean jsr310Support) {
-        this.jsr310Support = jsr310Support;
-    }
+  public boolean isUseExample() {
+    return useExample;
+  }
 
-    public boolean isUseSchemaPrefix() {
-        return useSchemaPrefix;
-    }
+  public void setUseExample(boolean useExample) {
+    this.useExample = useExample;
+  }
 
-    public void setUseSchemaPrefix(boolean useSchemaPrefix) {
-        this.useSchemaPrefix = useSchemaPrefix;
-    }
+  public String getName() {
+    return name;
+  }
 
-	public boolean isUseExample() {
-		return useExample;
-	}
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	public void setUseExample(boolean useExample) {
-		this.useExample = useExample;
-	}
+  public String getTableName() {
+    return tableName;
+  }
 
-	public String getName() {
-		return name;
-	}
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public String getDomainName() {
+    return domainName;
+  }
 
-	public String getTableName() {
-		return tableName;
-	}
+  public void setDomainName(String domainName) {
+    this.domainName = domainName;
+  }
 
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
+  public String getConnectorJarPath() {
+    return connectorJarPath;
+  }
 
-	public String getDomainName() {
-		return domainName;
-	}
+  public void setConnectorJarPath(String connectorJarPath) {
+    this.connectorJarPath = connectorJarPath;
+  }
 
-	public void setDomainName(String domainName) {
-		this.domainName = domainName;
-	}
+  public String getModuleRootPath() {
+    return moduleRootPath;
+  }
 
-	public String getConnectorJarPath() {
-		return connectorJarPath;
-	}
+  public void setModuleRootPath(String moduleRootPath) {
+    this.moduleRootPath = moduleRootPath;
+  }
 
-	public void setConnectorJarPath(String connectorJarPath) {
-		this.connectorJarPath = connectorJarPath;
-	}
+  public String getDomainPackage() {
+    return domainPackage;
+  }
 
-	public String getModuleRootPath() {
-		return moduleRootPath;
-	}
+  public void setDomainPackage(String domainPackage) {
+    this.domainPackage = domainPackage;
+  }
 
-	public void setModuleRootPath(String moduleRootPath) {
-		this.moduleRootPath = moduleRootPath;
-	}
 
-	public String getDomainPackage() {
-		return domainPackage;
-	}
+  public String getMapperPackage() {
+    return mapperPackage;
+  }
 
-	public void setDomainPackage(String domainPackage) {
-		this.domainPackage = domainPackage;
-	}
+  public void setMapperPackage(String mapperPackage) {
+    this.mapperPackage = mapperPackage;
+  }
 
 
-	public String getMapperPackage() {
-		return mapperPackage;
-	}
+  public String getXmlPackage() {
+    return xmlPackage;
+  }
 
-	public void setMapperPackage(String mapperPackage) {
-		this.mapperPackage = mapperPackage;
-	}
+  public void setXmlPackage(String xmlPackage) {
+    this.xmlPackage = xmlPackage;
+  }
 
+  public boolean isComment() {
+    return comment;
+  }
 
-	public String getXmlPackage() {
-		return xmlPackage;
-	}
+  public void setComment(boolean comment) {
+    this.comment = comment;
+  }
 
-	public void setXmlPackage(String xmlPackage) {
-		this.xmlPackage = xmlPackage;
-	}
+  public boolean isNeedToStringHashcodeEquals() {
+    return needToStringHashcodeEquals;
+  }
 
-	public boolean isOffsetLimit() {
-		return offsetLimit;
-	}
+  public void setNeedToStringHashcodeEquals(boolean needToStringHashcodeEquals) {
+    this.needToStringHashcodeEquals = needToStringHashcodeEquals;
+  }
 
-	public void setOffsetLimit(boolean offsetLimit) {
-		this.offsetLimit = offsetLimit;
-	}
 
-	public boolean isComment() {
-		return comment;
-	}
+  public boolean isAnnotationDAO() {
+    return annotationDAO;
+  }
 
-	public void setComment(boolean comment) {
-		this.comment = comment;
-	}
+  public void setAnnotationDAO(boolean annotationDAO) {
+    this.annotationDAO = annotationDAO;
+  }
 
-    public boolean isNeedToStringHashcodeEquals() {
-        return needToStringHashcodeEquals;
-    }
+  public boolean isAnnotation() {
+    return annotation;
+  }
 
-    public void setNeedToStringHashcodeEquals(boolean needToStringHashcodeEquals) {
-        this.needToStringHashcodeEquals = needToStringHashcodeEquals;
-    }
+  public void setAnnotation(boolean annotation) {
+    this.annotation = annotation;
+  }
 
-	public boolean isNeedForUpdate() {
-		return needForUpdate;
-	}
+  public boolean isUseActualColumnNames() {
+    return useActualColumnNames;
+  }
 
-	public void setNeedForUpdate(boolean needForUpdate) {
-		this.needForUpdate = needForUpdate;
-	}
+  public void setUseActualColumnNames(boolean useActualColumnNames) {
+    this.useActualColumnNames = useActualColumnNames;
+  }
 
-	public boolean isAnnotationDAO() {
-		return annotationDAO;
-	}
+  public String getMapperName() {
+    return mapperName;
+  }
 
-	public void setAnnotationDAO(boolean annotationDAO) {
-		this.annotationDAO = annotationDAO;
-	}
+  public void setMapperName(String mapperName) {
+    this.mapperName = mapperName;
+  }
 
-	public boolean isAnnotation() {
-		return annotation;
-	}
+  public String getPrimaryKey() {
+    return primaryKey;
+  }
 
-	public void setAnnotation(boolean annotation) {
-		this.annotation = annotation;
-	}
+  public void setPrimaryKey(String primaryKey) {
+    this.primaryKey = primaryKey;
+  }
 
-	public boolean isUseActualColumnNames() {
-		return useActualColumnNames;
-	}
+  public String getEncoding() {
+    return encoding;
+  }
 
-	public void setUseActualColumnNames(boolean useActualColumnNames) {
-		this.useActualColumnNames = useActualColumnNames;
-	}
+  public void setEncoding(String encoding) {
+    this.encoding = encoding;
+  }
 
-	public String getMapperName() {
-		return mapperName;
-	}
+  public boolean isOverride() {
+    return override;
+  }
 
-	public void setMapperName(String mapperName) {
-		this.mapperName = mapperName;
-	}
+  public void setOverride(boolean override) {
+    this.override = override;
+  }
 
-	public String getPrimaryKey() {
-		return primaryKey;
-	}
+  public void setUseDAOExtendStyle(boolean useDAOExtendStyle) {
+    this.useDAOExtendStyle = useDAOExtendStyle;
+  }
 
-	public void setPrimaryKey(String primaryKey) {
-		this.primaryKey = primaryKey;
-	}
+  public boolean isUseDAOExtendStyle() {
+    return useDAOExtendStyle;
+  }
 
-    public String getEncoding() {
-        return encoding;
-    }
+  public String getSourcePath() {
+    return sourcePath;
+  }
 
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
+  public void setSourcePath(String sourcePath) {
+    this.sourcePath = sourcePath;
+  }
 
-	public boolean getUseTableNameAlias() {
-		return useTableNameAlias;
-	}
+  public String getResourcePath() {
+    return resourcePath;
+  }
 
-	public void setUseTableNameAlias(boolean useTableNameAlias) {
-		this.useTableNameAlias = useTableNameAlias;
-	}
+  public void setResourcePath(String resourcePath) {
+    this.resourcePath = resourcePath;
+  }
 
-	public boolean isUseTableNameAlias() {
-		return useTableNameAlias;
-	}
+  public String getMapperPostfix() {
+    return mapperPostfix;
+  }
 
-	public boolean isOverride() {
-		return override;
-	}
+  public void setMapperPostfix(String mapperPostfix) {
+    this.mapperPostfix = mapperPostfix;
+  }
 
-	public void setOverride(boolean override) {
-		this.override = override;
-	}
+  public boolean isMysql8() {
+    return mysql8;
+  }
 
-	public void setUseDAOExtendStyle(boolean useDAOExtendStyle) {
-		this.useDAOExtendStyle = useDAOExtendStyle;
-	}
+  public void setMysql8(boolean mysql8) {
+    this.mysql8 = mysql8;
+  }
 
-	public boolean isUseDAOExtendStyle() {
-		return useDAOExtendStyle;
-	}
+  public boolean isLombokAnnotation() {
+    return lombokAnnotation;
+  }
 
-	public String getSourcePath() {
-		return sourcePath;
-	}
+  public void setLombokAnnotation(boolean lombokAnnotation) {
+    this.lombokAnnotation = lombokAnnotation;
+  }
 
-	public void setSourcePath(String sourcePath) {
-		this.sourcePath = sourcePath;
-	}
+  public boolean isLombokBuilderAnnotation() {
+    return lombokBuilderAnnotation;
+  }
 
-	public String getResourcePath() {
-		return resourcePath;
-	}
+  public void setLombokBuilderAnnotation(boolean lombokBuilderAnnotation) {
+    this.lombokBuilderAnnotation = lombokBuilderAnnotation;
+  }
 
-	public void setResourcePath(String resourcePath) {
-		this.resourcePath = resourcePath;
-	}
+  public String getExamplePackage() {
+    return examplePackage;
+  }
 
-	public String getMapperPostfix() {
-		return mapperPostfix;
-	}
+  public void setExamplePackage(String examplePackage) {
+    this.examplePackage = examplePackage;
+  }
 
-	public void setMapperPostfix(String mapperPostfix) {
-		this.mapperPostfix = mapperPostfix;
-	}
+  public String getExamplePostfix() {
+    return examplePostfix;
+  }
 
-	public boolean isMysql8() {
-		return mysql8;
-	}
+  public void setExamplePostfix(String examplePostfix) {
+    this.examplePostfix = examplePostfix;
+  }
 
-	public void setMysql8(boolean mysql8) {
-		this.mysql8 = mysql8;
-	}
+  public String getExampleName() {
+    return exampleName;
+  }
 
-	public boolean isLombokAnnotation() {
-		return lombokAnnotation;
-	}
+  public void setExampleName(String exampleName) {
+    this.exampleName = exampleName;
+  }
 
-	public void setLombokAnnotation(boolean lombokAnnotation) {
-		this.lombokAnnotation = lombokAnnotation;
-	}
+  public String getBasePackage() {
+    return basePackage;
+  }
 
-	public boolean isLombokBuilderAnnotation() {
-		return lombokBuilderAnnotation;
-	}
+  public void setBasePackage(String basePackage) {
+    this.basePackage = basePackage;
+  }
 
-	public void setLombokBuilderAnnotation(boolean lombokBuilderAnnotation) {
-		this.lombokBuilderAnnotation = lombokBuilderAnnotation;
-	}
+  public Map<String, ColumnSetting> getColumnSettings() {
+    return columnSettings;
+  }
 
-	public boolean isSwaggerAnnotation() {
-		return swaggerAnnotation;
-	}
+  public void setColumnSettings(Map<String, ColumnSetting> columnSettings) {
+    this.columnSettings = columnSettings;
+  }
 
-	public void setSwaggerAnnotation(boolean swaggerAnnotation) {
-		this.swaggerAnnotation = swaggerAnnotation;
-	}
+  public String getDomainPostfix() {
+    return domainPostfix;
+  }
 
-	public String getExamplePackage() {
-		return examplePackage;
-	}
+  public void setDomainPostfix(String domainPostfix) {
+    this.domainPostfix = domainPostfix;
+  }
 
-	public void setExamplePackage(String examplePackage) {
-		this.examplePackage = examplePackage;
-	}
+  public String getMgbTargetRuntime() {
+    return mgbTargetRuntime;
+  }
 
-	public String getExamplePostfix() {
-		return examplePostfix;
-	}
+  public void setMgbTargetRuntime(String mgbTargetRuntime) {
+    this.mgbTargetRuntime = mgbTargetRuntime;
+  }
 
-	public void setExamplePostfix(String examplePostfix) {
-		this.examplePostfix = examplePostfix;
-	}
+  public boolean isUseTableNameAlias() {
+    return useTableNameAlias;
+  }
 
-	public String getExampleName() {
-		return exampleName;
-	}
+  public void setUseTableNameAlias(boolean useTableNameAlias) {
+    this.useTableNameAlias = useTableNameAlias;
+  }
 
-	public void setExampleName(String exampleName) {
-		this.exampleName = exampleName;
-	}
+  public String getMgbJavaClientConfigType() {
+    return mgbJavaClientConfigType;
+  }
 
-	public String getBasePackage() {
-		return basePackage;
-	}
-
-	public void setBasePackage(String basePackage) {
-		this.basePackage = basePackage;
-	}
-
-	public Map<String, ColumnSetting> getColumnSettings() {
-		return columnSettings;
-	}
-
-	public void setColumnSettings(Map<String, ColumnSetting> columnSettings) {
-		this.columnSettings = columnSettings;
-	}
-
-	public String getDomainPostfix() {
-		return domainPostfix;
-	}
-
-	public void setDomainPostfix(String domainPostfix) {
-		this.domainPostfix = domainPostfix;
-	}
-
-	public String getMgbTargetRuntime() {
-		return mgbTargetRuntime;
-	}
-
-	public void setMgbTargetRuntime(String mgbTargetRuntime) {
-		this.mgbTargetRuntime = mgbTargetRuntime;
-	}
+  public void setMgbJavaClientConfigType(String mgbJavaClientConfigType) {
+    this.mgbJavaClientConfigType = mgbJavaClientConfigType;
+  }
 }

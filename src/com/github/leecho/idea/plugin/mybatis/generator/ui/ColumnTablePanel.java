@@ -18,11 +18,8 @@ import com.intellij.util.ui.JBUI;
 import org.jdesktop.swingx.JXTable;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.internal.types.JavaTypeResolverDefaultImpl;
-import org.mybatis.generator.internal.types.JdbcTypeNameTranslator;
 
 import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import java.awt.*;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -31,6 +28,7 @@ import java.util.ArrayList;
  * @author LIQIU
  * created on 2019/6/20
  **/
+@Deprecated
 public class ColumnTablePanel extends JBPanel {
 
     /**
@@ -86,7 +84,7 @@ public class ColumnTablePanel extends JBPanel {
             } else if ("INT".equals(typeName)) {
                 introspectedColumn.setJdbcType(Types.INTEGER);
             } else {
-                introspectedColumn.setJdbcType(JdbcTypeNameTranslator.getJdbcType(typeName));
+                introspectedColumn.setJdbcTypeName(typeName);
             }
             introspectedColumn.setLength(dasColumn.getDataType().getLength());
             introspectedColumn.setScale(dasColumn.getDataType().getScale());
