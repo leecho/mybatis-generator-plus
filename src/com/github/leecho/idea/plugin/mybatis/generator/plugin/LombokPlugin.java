@@ -184,7 +184,6 @@ public class LombokPlugin extends PluginAdapter {
         }
     }
 
-    @Override
     public boolean clientGenerated(
             Interface interfaze,
             TopLevelClass topLevelClass,

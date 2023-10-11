@@ -8,6 +8,19 @@
         <![CDATA[
    <ul>
        <li>
+            支持DataGrip<br/>
+            支持自定义domain后缀<br/>
+            支持自动识别mysql版本<br/>
+            支持xml默认包设置<br/>
+            支持选择mgb运行时<br/>
+            project tools 配置界面去除package相关配置<br/>
+            数据库用户名密码改为明文存储在插件持久化xml中（解决每次都要输入主机登录密码的烦恼）<br/>
+        </li>
+   </ul>
+    ]]>
+        <![CDATA[
+   <ul>
+       <li>
             Integrate with the Idea Database tool<br/>
             Support mapper class file merge<br/>
             Support mapper xml file merge<br/>
@@ -92,13 +105,16 @@
     ]]>
     </change-notes>
 
-    <idea-version since-build="143"/>
+    <idea-version since-build="193.5233.102"/>
 
-    <depends optional="true">com.intellij.database</depends>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.database</depends>
     <extensions defaultExtensionNs="com.intellij">
+        <!--  持久化配置      -->
         <projectService
                 serviceInterface="com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration"
                 serviceImplementation="com.github.leecho.idea.plugin.mybatis.generator.setting.MyBatisGeneratorConfiguration"/>
+        <!--   全局设置中的配置     -->
         <projectConfigurable groupId="tools" displayName="Mybatis Generator Plus" id="Mybatis.Generator.Plus.Plugin"
                              instance="com.github.leecho.idea.plugin.mybatis.generator.setting.SettingConfigurable"/>
     </extensions>
